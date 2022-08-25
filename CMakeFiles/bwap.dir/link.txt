@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/bwap.dir/bwap.c.o -o bwap  -lnuma 
