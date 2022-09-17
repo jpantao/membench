@@ -11,8 +11,7 @@
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
 #define CACHE_LINE_SIZE     64 // In bytes
 
-bool op_seq, op_rand, op_pregen = false;
-
+bool op_seq, op_rand, op_pregen, op_prefetch = false;
 
 
 unsigned long time_diff(struct timeval *start, struct timeval *stop) {
@@ -53,18 +52,18 @@ void argparse(int argc, char *argv[]){
 			case 'r':
 				op_rand = true;
             	break;
-			case 'p':
+			case 'g':
 				op_pregen = true;
             	break;
-        
+			case 'p':
+				op_prefetch = true;
+            	break;
         	default:
 				printf("Uknown option: %s\n", token);
         }
-
     }
 
 }
-
 
 int main(int argc, char *argv[]){  
     argparse(argc,argv);
@@ -93,12 +92,15 @@ int main(int argc, char *argv[]){
 
 		if(op_seq){
 			seq_offset = i % access_max; // for when iterations > data_size
-        	// prefetch_memory(data + seq_offset, size_to_access);
+			if (op_prefetch)
+				prefetch_memory(data + seq_offset, size_to_access);
 			access_memory(data + seq_offset, size_to_access);
 		}
 		
 		if(op_rand){
 			rand_offset = rand_r(&seed) % access_max; 
+			if(op_prefetch)
+        		prefetch_memory(data + rand_offset, size_to_access);
 			access_memory(data + rand_offset, size_to_access);
 		}
 
@@ -112,7 +114,6 @@ int main(int argc, char *argv[]){
         // access_memory(data + rand_offset, size_to_access);
 
     }
-
     gettimeofday(&tend, NULL);
 
     unsigned long duration = time_diff(&tstart, &tend);

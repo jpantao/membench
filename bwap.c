@@ -69,12 +69,12 @@ struct thread_data {
 double node_bw[8];
 uint64_t memory_size = 0;
 
-inline void prefetch(uint64_t *memory_to_access, int pos, int step){
-    __builtin_prefetch(memory_to_access[pos]);
-//    for(int i = 0; i < step; i++){
-//        __builtin_prefetch(memory_to_access[pos + i]);
-//    }
-}
+// inline void prefetch(uint64_t *memory_to_access, int pos, int step){
+//     __builtin_prefetch(memory_to_access[pos]);
+// //    for(int i = 0; i < step; i++){
+// //        __builtin_prefetch(memory_to_access[pos + i]);
+// //    }
+// }
 
 /*
  * Benchmark
