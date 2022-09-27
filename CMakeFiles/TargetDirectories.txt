@@ -1,4 +1,3 @@
 /home/jpantao/git/membench/CMakeFiles/membench.dir
-/home/jpantao/git/membench/CMakeFiles/bwap.dir
 /home/jpantao/git/membench/CMakeFiles/edit_cache.dir
 /home/jpantao/git/membench/CMakeFiles/rebuild_cache.dir

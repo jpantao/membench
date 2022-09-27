@@ -64,7 +64,6 @@ CMAKE_BINARY_DIR = /home/jpantao/git/membench
 
 # The main recursive "all" target.
 all: CMakeFiles/membench.dir/all
-all: CMakeFiles/bwap.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -73,7 +72,6 @@ preinstall:
 
 # The main recursive "clean" target.
 clean: CMakeFiles/membench.dir/clean
-clean: CMakeFiles/bwap.dir/clean
 .PHONY : clean
 
 #=============================================================================
@@ -83,7 +81,7 @@ clean: CMakeFiles/bwap.dir/clean
 CMakeFiles/membench.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/membench.dir/build.make CMakeFiles/membench.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/membench.dir/build.make CMakeFiles/membench.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/jpantao/git/membench/CMakeFiles --progress-num=3,4 "Built target membench"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/jpantao/git/membench/CMakeFiles --progress-num=1,2 "Built target membench"
 .PHONY : CMakeFiles/membench.dir/all
 
 # Build rule for subdir invocation for target.
@@ -101,32 +99,6 @@ membench: CMakeFiles/membench.dir/rule
 CMakeFiles/membench.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/membench.dir/build.make CMakeFiles/membench.dir/clean
 .PHONY : CMakeFiles/membench.dir/clean
-
-#=============================================================================
-# Target rules for target CMakeFiles/bwap.dir
-
-# All Build rule for target.
-CMakeFiles/bwap.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bwap.dir/build.make CMakeFiles/bwap.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bwap.dir/build.make CMakeFiles/bwap.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/jpantao/git/membench/CMakeFiles --progress-num=1,2 "Built target bwap"
-.PHONY : CMakeFiles/bwap.dir/all
-
-# Build rule for subdir invocation for target.
-CMakeFiles/bwap.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jpantao/git/membench/CMakeFiles 2
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bwap.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/jpantao/git/membench/CMakeFiles 0
-.PHONY : CMakeFiles/bwap.dir/rule
-
-# Convenience name for target.
-bwap: CMakeFiles/bwap.dir/rule
-.PHONY : bwap
-
-# clean rule for target.
-CMakeFiles/bwap.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bwap.dir/build.make CMakeFiles/bwap.dir/clean
-.PHONY : CMakeFiles/bwap.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

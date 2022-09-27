@@ -129,43 +129,6 @@ membench/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/membench.dir/build.make CMakeFiles/membench.dir/build
 .PHONY : membench/fast
 
-#=============================================================================
-# Target rules for targets named bwap
-
-# Build rule for target.
-bwap: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bwap
-.PHONY : bwap
-
-# fast build rule for target.
-bwap/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bwap.dir/build.make CMakeFiles/bwap.dir/build
-.PHONY : bwap/fast
-
-bwap.o: bwap.c.o
-.PHONY : bwap.o
-
-# target to build an object file
-bwap.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bwap.dir/build.make CMakeFiles/bwap.dir/bwap.c.o
-.PHONY : bwap.c.o
-
-bwap.i: bwap.c.i
-.PHONY : bwap.i
-
-# target to preprocess a source file
-bwap.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bwap.dir/build.make CMakeFiles/bwap.dir/bwap.c.i
-.PHONY : bwap.c.i
-
-bwap.s: bwap.c.s
-.PHONY : bwap.s
-
-# target to generate assembly for a file
-bwap.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bwap.dir/build.make CMakeFiles/bwap.dir/bwap.c.s
-.PHONY : bwap.c.s
-
 membench.o: membench.c.o
 .PHONY : membench.o
 
@@ -198,11 +161,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... bwap"
 	@echo "... membench"
-	@echo "... bwap.o"
-	@echo "... bwap.i"
-	@echo "... bwap.s"
 	@echo "... membench.o"
 	@echo "... membench.i"
 	@echo "... membench.s"
