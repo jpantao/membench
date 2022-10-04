@@ -7,6 +7,7 @@ numa_node="$1"
 
 mkdir -p logs
 
+echo "#### STARTING ####"
 echo 'seq access'      
 numactl --membind=$numa_node ./membench -s | tee logs/membench_seq.log
 echo ''

@@ -84,7 +84,8 @@ int main(int argc, char *argv[]){
     argparse(argc,argv);
 
     struct timeval tstart, tend;
-    unsigned int seed = time(NULL);
+    // unsigned int seed = time(NULL);
+    unsigned int seed = 0;
 
     // setup perf_event (for more details: man perf_event_open)
     int fd;
@@ -137,8 +138,7 @@ int main(int argc, char *argv[]){
     ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
 
     for(int i = 0; i < iterations; i++){
-      
-
+        
 		if(op_seq){
 			seq_offset = i % access_max; 
 			next_seq_offset = i+1 % access_max; 
@@ -161,9 +161,7 @@ int main(int argc, char *argv[]){
             if(op_prefetch)
         		prefetch_memory(data + next_pregen_offset, size_to_access);
 			access_memory(data + pregen_offset, size_to_access);
-		}
-
-        // access_memory(data + rand_offset, size_to_access);
+		}     
 
     }
 

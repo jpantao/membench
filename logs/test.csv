@@ -1,0 +1,7 @@
+node_type,access_type,throughput,cache_misses
+dram,seq,55900,262953
+dram,rnd,8600,174944940
+dram,pgn,8004,180002883
+dram,seq_prefetch,32656,365
+dram,rnd_prefetch,19804,434366
+dram,pgn_prefetch,18970,678233
