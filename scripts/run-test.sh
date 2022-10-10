@@ -1,15 +1,17 @@
 #!/bin/bash
 
-
 test_name=$1
 n_runs=$2
 
-for run in $(seq 0 ${n_runs}); do
-  dir="logs/${testname}/run_${run}"
-  mkdir -p ${dir}
-  echo "Starting run ${run}"
-  ./scripts/bennchmark-node.sh 0 "dram" "${dir}/dram_benchmark.log"
-  echo 'dram_benchmark'
-  ./scripts/bennchmark-node.sh 3 "pmem" "${dir}/pmem_benchmark.log"
-  echo 'pmem_benchmark'
+cmake .
+make clean
+make
+
+mkdir -p logs
+log_file="logs/${test_name}.csv"
+echo "run,node_type,access_type,throughput,cache_misses" | tee -a ${log_file}
+for run in $(seq 1 ${n_runs}); do
+  echo "------ run ${run} > ${log_file} ------"
+  ./scripts/benchmark-node.sh 0 "memory_mode" ${log_file} ${run}
+  # ./scripts/benchmark-node.sh 3 "pmem" ${log_file} ${run}
 done

@@ -1,33 +1,17 @@
- #!/bin/bash
+#!/bin/bash
 
-# usage:
-# ./scripts/run-test.sh  <numa-node>
+test_name=$1
+n_runs=$2
 
-numa_node="$1"
+cmake .
+make clean
+make
 
 mkdir -p logs
-
-echo "#### STARTING ####"
-echo 'seq access'      
-numactl --membind=$numa_node ./membench -s | tee logs/membench_seq.log
-echo ''
-
-echo 'seq access (prefetch)'      
-numactl --membind=$numa_node ./membench -s -p | tee logs/membench_p_seq.log
-
-echo ''
-echo 'rand access'      
-numactl --membind=$numa_node ./membench -r | tee logs/membench_rnd.log
-echo ''
-
-echo 'rand access (prefetch)'      
-numactl --membind=$numa_node ./membench -r  -p| tee logs/membench_p_rnd.log
-
-echo ''
-echo 'pregen access'
-numactl --membind=$numa_node ./membench -g | tee logs/membench_pgn.log
-echo ''
-
-echo 'pregen access (prefetch)'
-numactl --membind=$numa_node ./membench -g -p | tee logs/membench_p_pgn.log
-echo "#### FINISHED ####"
+log_file="logs/${test_name}.csv"
+echo "run,node_type,access_type,throughput,cache_misses" | tee -a ${log_file}
+for run in $(seq 1 ${n_runs}); do
+  echo "------ run ${run} > ${log_file} ------"
+  ./scripts/benchmark-node.sh 0 "memory_mode" ${log_file} ${run}
+  # ./scripts/benchmark-node.sh 3 "pmem" ${log_file} ${run}
+done

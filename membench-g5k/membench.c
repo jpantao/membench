@@ -19,7 +19,9 @@
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
 #define CACHE_LINE_SIZE     64 // In bytes
 
-bool op_seq, op_rand, op_pregen, op_prefetch = false;
+#define N_OPERATIONS        100000000
+
+bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 
 
 static long perf_event_open(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags) {
@@ -73,6 +75,9 @@ void argparse(int argc, char *argv[]){
 			case 'p':
 				op_prefetch = true;
             	break;
+			case 'c':
+				op_csv = true;
+            	break;
         	default:
 				printf("Uknown option: %s\n", token);
         }
@@ -101,12 +106,7 @@ int main(int argc, char *argv[]){
     pe.exclude_kernel = 1;
     pe.exclude_hv = 1;
     
-    fd = perf_event_open(&pe, 0, -1, -1, 0);
-    if (fd == -1) {
-        fprintf(stderr, "Error opening leader %llx\n", pe.config);
-        exit(EXIT_FAILURE);
-    }
-
+    
     // Initialize data
     int data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH;
     uint64_t* data =  malloc(data_size);
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]){
     // printf("iterations: %d\n", iterations);
     int iterations, seq_offset, rand_offset, pregen_offset;
     int next_seq_offset, next_rand_offset, next_pregen_offset;
-    iterations = data_size / DATA_UNIT_SIZE;
+    iterations = N_OPERATIONS;
 
     int* pregen_array;
     if(op_pregen){
@@ -131,6 +131,12 @@ int main(int argc, char *argv[]){
     }
     
     
+
+    fd = perf_event_open(&pe, 0, -1, -1, 0);
+    if (fd == -1) {
+        fprintf(stderr, "Error opening leader %llx\n", pe.config);
+        exit(EXIT_FAILURE);
+    }
 
     gettimeofday(&tstart, NULL);
 
@@ -144,7 +150,9 @@ int main(int argc, char *argv[]){
 			next_seq_offset = i+1 % access_max; 
 			if (op_prefetch)
 				prefetch_memory(data + next_seq_offset, size_to_access);
+            // ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
 			access_memory(data + seq_offset, size_to_access);
+            // ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
 		}
 		
 		if(op_rand){
@@ -152,7 +160,9 @@ int main(int argc, char *argv[]){
 			next_rand_offset = rand_r(&seed) % access_max; 
 			if(op_prefetch)
         		prefetch_memory(data + next_rand_offset, size_to_access);
+            // ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
 			access_memory(data + rand_offset, size_to_access);
+            // ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
 		}
 
 		if(op_pregen){
@@ -160,7 +170,9 @@ int main(int argc, char *argv[]){
 			next_pregen_offset = pregen_array[i+1] % access_max;            
             if(op_prefetch)
         		prefetch_memory(data + next_pregen_offset, size_to_access);
+            // ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
 			access_memory(data + pregen_offset, size_to_access);
+            // ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
 		}     
 
     }
@@ -168,18 +180,17 @@ int main(int argc, char *argv[]){
     ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
     gettimeofday(&tend, NULL);
 
+    unsigned long duration = time_diff(&tstart, &tend);
     read(fd, &miss_count, sizeof(long long));
 
-    unsigned long duration = time_diff(&tstart, &tend);
+    int tp = iterations/(duration / 1000);
 
-    // printf("duration: %ld ms\n", duration / 1000);
-    printf("troughput: %ld op/ms\n", iterations/(duration / 1000));
-    printf("cache_misses: %lld \n", miss_count);
-
-    // close(fd);
-    // free(data);
-    // if(op_pregen)
-    //     free(pregen_array);
-
+    if(op_csv){
+        printf("%ld,%lld\n", tp, miss_count);
+    }else {
+        printf("troughput: %ld op/ms\n", tp);
+        printf("cache_misses: %lld \n", miss_count);
+    }
+    
     return 0;
 }

@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/jpantao/git/membench/build",
+  "command": "/usr/bin/gcc -g -std=gnu99 -o CMakeFiles/membench.dir/membench.c.o -c /home/jpantao/git/membench/membench.c",
+  "file": "/home/jpantao/git/membench/membench.c"
+}
+]

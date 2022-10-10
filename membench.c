@@ -19,6 +19,8 @@
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
 #define CACHE_LINE_SIZE     64 // In bytes
 
+#define N_OPERATIONS        100000000
+
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 
 
@@ -35,6 +37,7 @@ unsigned long time_diff(struct timeval *start, struct timeval *stop) {
     return 1000000 * sec_res + usec_res;
 }
 
+//TODO
 void prefetch_memory(uint64_t *address, int size){
     uint64_t fake = 0;
     const void* current;
@@ -44,6 +47,7 @@ void prefetch_memory(uint64_t *address, int size){
     }
 }
 
+//TODO
 uint64_t access_memory(uint64_t *address, int size){
     uint64_t fake = 0;
     for(int i = 0; i < size; i++){
@@ -104,12 +108,7 @@ int main(int argc, char *argv[]){
     pe.exclude_kernel = 1;
     pe.exclude_hv = 1;
     
-    fd = perf_event_open(&pe, 0, -1, -1, 0);
-    if (fd == -1) {
-        fprintf(stderr, "Error opening leader %llx\n", pe.config);
-        exit(EXIT_FAILURE);
-    }
-
+    
     // Initialize data
     int data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH;
     uint64_t* data =  malloc(data_size);
@@ -118,13 +117,11 @@ int main(int argc, char *argv[]){
     
     int size_to_access = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
     int access_max = data_size / DATA_UNIT_SIZE - size_to_access;
-    // printf("%d\n", rand_max);
-    // printf("%d\n", rand_r(&seed) % rand_max);
-
-    // printf("iterations: %d\n", iterations);
+    
     int iterations, seq_offset, rand_offset, pregen_offset;
     int next_seq_offset, next_rand_offset, next_pregen_offset;
-    iterations = data_size / DATA_UNIT_SIZE;
+
+    iterations = N_OPERATIONS;
 
     int* pregen_array;
     if(op_pregen){
@@ -134,6 +131,12 @@ int main(int argc, char *argv[]){
     }
     
     
+
+    fd = perf_event_open(&pe, 0, -1, -1, 0);
+    if (fd == -1) {
+        fprintf(stderr, "Error opening leader %llx\n", pe.config);
+        exit(EXIT_FAILURE);
+    }
 
     gettimeofday(&tstart, NULL);
 
