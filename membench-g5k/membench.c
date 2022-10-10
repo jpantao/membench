@@ -12,8 +12,6 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-
-
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH  (1024*1024*1024) // In bytes
 
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
@@ -37,21 +35,14 @@ unsigned long time_diff(struct timeval *start, struct timeval *stop) {
     return 1000000 * sec_res + usec_res;
 }
 
-void prefetch_memory(uint64_t *address, int size){
+static inline uint64_t access_memory(uint64_t *address){
     uint64_t fake = 0;
-    const void* current;
-    for(int i = 0; i < size; i++){
-        current = address + i;
-        __builtin_prefetch(current);
-    }
+    fake += *address;
+    return fake;
 }
 
-uint64_t access_memory(uint64_t *address, int size){
-    uint64_t fake = 0;
-    for(int i = 0; i < size; i++){
-        fake += *(address+i);
-    }
-    return fake;
+static inline int gen_address(int* seed, int cacheline_size, int access_max){
+    return ((rand_r(seed) >> 3) <<3) % access_max;
 }
 
 void argparse(int argc, char *argv[]){
@@ -113,21 +104,24 @@ int main(int argc, char *argv[]){
 
     memset(data, 0, data_size); 
     
-    int size_to_access = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
-    int access_max = data_size / DATA_UNIT_SIZE - size_to_access;
-    // printf("%d\n", rand_max);
-    // printf("%d\n", rand_r(&seed) % rand_max);
+    int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
+    int access_max = data_size / DATA_UNIT_SIZE;
+    
+    int iterations, seq_offset, rand_offset, pregen_offset = 0;
+    int next_seq_offset, next_rand_offset, next_pregen_offset, pregen_i = 0;
 
-    // printf("iterations: %d\n", iterations);
-    int iterations, seq_offset, rand_offset, pregen_offset;
-    int next_seq_offset, next_rand_offset, next_pregen_offset;
+    next_seq_offset = 0;
+    next_rand_offset = gen_address(&seed, cache_line_size, access_max); 
+
+
     iterations = N_OPERATIONS;
 
     int* pregen_array;
     if(op_pregen){
         pregen_array = malloc(iterations);
         for(int i=0; i<iterations; i++)
-            pregen_array[i] = rand_r(&seed);
+            pregen_array[i] = gen_address(&seed, cache_line_size, access_max);
+        next_pregen_offset = pregen_array[pregen_i++];
     }
     
     
@@ -146,33 +140,34 @@ int main(int argc, char *argv[]){
     for(int i = 0; i < iterations; i++){
         
 		if(op_seq){
-			seq_offset = i % access_max; 
-			next_seq_offset = i+1 % access_max; 
-			if (op_prefetch)
-				prefetch_memory(data + next_seq_offset, size_to_access);
-            // ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
-			access_memory(data + seq_offset, size_to_access);
-            // ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+			seq_offset = next_seq_offset; 
+			next_seq_offset = (seq_offset + cache_line_size) % access_max;; 
+			if (op_prefetch){
+                __builtin_prefetch(data + next_seq_offset);
+                //TODO: waitloop
+            }
+			access_memory(data + seq_offset);
 		}
 		
 		if(op_rand){
 			rand_offset = next_rand_offset; 
-			next_rand_offset = rand_r(&seed) % access_max; 
-			if(op_prefetch)
-        		prefetch_memory(data + next_rand_offset, size_to_access);
-            // ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
-			access_memory(data + rand_offset, size_to_access);
-            // ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+			next_rand_offset = gen_address(&seed, cache_line_size, access_max); 
+			if(op_prefetch){
+        	    __builtin_prefetch(data + next_rand_offset);
+                //TODO: waitloop
+            }
+			access_memory(data + rand_offset);
 		}
 
 		if(op_pregen){
-			pregen_offset = pregen_array[i] % access_max;            
-			next_pregen_offset = pregen_array[i+1] % access_max;            
-            if(op_prefetch)
-        		prefetch_memory(data + next_pregen_offset, size_to_access);
-            // ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
-			access_memory(data + pregen_offset, size_to_access);
-            // ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+			pregen_offset = next_pregen_offset;            
+			next_pregen_offset = pregen_array[pregen_i++];          
+            pregen_i = pregen_i % iterations;
+            if(op_prefetch){
+                __builtin_prefetch(data + next_pregen_offset);
+                //TODO: waitloop
+            }
+			access_memory(data + pregen_offset);
 		}     
 
     }
