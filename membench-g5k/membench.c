@@ -93,9 +93,9 @@ int main(int argc, char *argv[]){
     pe.config = PERF_COUNT_HW_CACHE_LL |
                 PERF_COUNT_HW_CACHE_OP_READ << 8 |
                 PERF_COUNT_HW_CACHE_RESULT_MISS << 16;
-    pe.disabled = 1;
     pe.exclude_kernel = 1;
     pe.exclude_hv = 1;
+    pe.disabled = 1;
     
     
     // Initialize data
