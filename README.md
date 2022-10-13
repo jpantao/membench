@@ -9,5 +9,5 @@ Pushing the code to the site:
 
 Passive reservation:
 ```
-oarsub -t exotic -p "cluster='troll'" -t deploy -l nodes=1,walltime=1 "./scripts/deploy-test.sh ../public/kmem_dax_env.dsc bench 1"
+oarsub -t exotic -p "cluster='troll'" -t deploy -l nodes=1,walltime=1 "./scripts/deploy-test.sh <test_name> <n_runs>"
 ```

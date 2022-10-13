@@ -13,21 +13,47 @@
 #include <sys/ioctl.h>
 
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH  (1024*1024*1024) // In bytes
+#define DEFAULT_WAITLOOP_ITERATIONS 1000000000 // 1M
 
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
 #define CACHE_LINE_SIZE     64 // In bytes
 
 #define N_OPERATIONS        100000000
 
-bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 
+bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
+int waitloop_iterations;
+
+void print_usage(char* exec_name){
+    printf("Usage: %s [OPTION]....\n", exec_name);
+    printf("Try 'grep -h' for more information.\n");
+}
+
+void print_help(char* exec_name){
+    printf("Usage: %s [OPTION]...\n", exec_name);
+    printf("Benchmark different kinds of memory accesses.\n");
+    printf("\n");
+    printf("Access types:\n");
+    printf("  -s\t\tsequential memory access\n");
+    printf("  -r\t\trandom memory access (generate a random address at 'access time')\n");
+    printf("  -g\t\trandom memory access (pre-generate random addresses for all accesses)\n");
+    printf("\n");
+    printf("Processor cache prefetch options:\n");
+    printf("  -p\t\tprefetch data to processor cache before each access (default=do not use prefetch)\n");
+    printf("  -w iterations\tnumber of iterations for the waitloop after each prefetch (default=%d)\n", DEFAULT_WAITLOOP_ITERATIONS);
+    printf("\n");
+    printf("Output control:\n");
+    printf("  -c\t\toutput in csv format (throughput,cache_misses)\n");
+    printf("\n");
+    printf("Miscellaneous:\n");
+    printf("  -h\t\tprint this message\n");
+}
 
 static long perf_event_open(struct perf_event_attr *hw_event, pid_t pid, int cpu, int group_fd, unsigned long flags) {
     int ret;
     ret = syscall(__NR_perf_event_open, hw_event, pid, cpu,group_fd, flags);
     return ret;
 }
-
 
 unsigned long time_diff(struct timeval *start, struct timeval *stop) {
     unsigned long sec_res = stop->tv_sec - start->tv_sec;
@@ -44,6 +70,13 @@ static inline uint64_t access_memory(uint64_t *address){
 static inline int gen_address(int* seed, int cacheline_size, int access_max){
     return ((rand_r(seed) >> 3) <<3) % access_max;
 }
+
+static inline void waitloop(int iterations){
+    while(iterations--){
+        __asm__ __volatile__("");
+    }
+}
+
 
 void argparse(int argc, char *argv[]){
 
@@ -69,12 +102,23 @@ void argparse(int argc, char *argv[]){
 			case 'c':
 				op_csv = true;
             	break;
-        	default:
-				printf("Uknown option: %s\n", token);
+        	case 'w':
+        	waitloop_iterations = atoi(argv[++i]);
+        	   break;
+            case 'h':
+                print_help(argv[0]);
+                exit(0);
+                break;
+            default:
+				printf("Unknow option: %s\n", token);
+				print_usage(argv[0]);
+				exit(0);
         }
     }
 
 }
+
+
 
 int main(int argc, char *argv[]){  
     argparse(argc,argv);
@@ -107,12 +151,7 @@ int main(int argc, char *argv[]){
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
     int access_max = data_size / DATA_UNIT_SIZE;
     
-    int iterations, seq_offset, rand_offset, pregen_offset = 0;
-    int next_seq_offset, next_rand_offset, next_pregen_offset, pregen_i = 0;
-
-    next_seq_offset = 0;
-    next_rand_offset = gen_address(&seed, cache_line_size, access_max); 
-
+    int iterations, seq_offset, rand_offset, pregen_offset, pregen_i = 0;
 
     iterations = N_OPERATIONS;
 
@@ -121,11 +160,8 @@ int main(int argc, char *argv[]){
         pregen_array = malloc(iterations);
         for(int i=0; i<iterations; i++)
             pregen_array[i] = gen_address(&seed, cache_line_size, access_max);
-        next_pregen_offset = pregen_array[pregen_i++];
     }
     
-    
-
     fd = perf_event_open(&pe, 0, -1, -1, 0);
     if (fd == -1) {
         fprintf(stderr, "Error opening leader %llx\n", pe.config);
@@ -140,32 +176,29 @@ int main(int argc, char *argv[]){
     for(int i = 0; i < iterations; i++){
         
 		if(op_seq){
-			seq_offset = next_seq_offset; 
-			next_seq_offset = (seq_offset + cache_line_size) % access_max;; 
+			seq_offset = (seq_offset + cache_line_size) % access_max;
 			if (op_prefetch){
-                __builtin_prefetch(data + next_seq_offset);
-                //TODO: waitloop
+                __builtin_prefetch(data + seq_offset);
+                waitloop(1000);
             }
 			access_memory(data + seq_offset);
 		}
 		
 		if(op_rand){
-			rand_offset = next_rand_offset; 
-			next_rand_offset = gen_address(&seed, cache_line_size, access_max); 
+			rand_offset = gen_address(&seed, cache_line_size, access_max);
 			if(op_prefetch){
-        	    __builtin_prefetch(data + next_rand_offset);
-                //TODO: waitloop
+        	    __builtin_prefetch(data + rand_offset);
+                waitloop(1000);
             }
 			access_memory(data + rand_offset);
 		}
 
 		if(op_pregen){
-			pregen_offset = next_pregen_offset;            
-			next_pregen_offset = pregen_array[pregen_i++];          
+			pregen_offset = pregen_array[pregen_i++];
             pregen_i = pregen_i % iterations;
             if(op_prefetch){
-                __builtin_prefetch(data + next_pregen_offset);
-                //TODO: waitloop
+                __builtin_prefetch(data + pregen_offset);
+                waitloop(1000);
             }
 			access_memory(data + pregen_offset);
 		}     

@@ -45,6 +45,12 @@ static inline int gen_address(int* seed, int cacheline_size, int access_max){
     return ((rand_r(seed) >> 3) <<3) % access_max;
 }
 
+static inline void waitloop(int iterations){
+    while(iterations--){
+        __asm__ __volatile__("");
+    }
+}
+
 void argparse(int argc, char *argv[]){
 
     for(int i = 1; i < argc; i++){
@@ -107,12 +113,7 @@ int main(int argc, char *argv[]){
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
     int access_max = data_size / DATA_UNIT_SIZE;
     
-    int iterations, seq_offset, rand_offset, pregen_offset = 0;
-    int next_seq_offset, next_rand_offset, next_pregen_offset, pregen_i = 0;
-
-    next_seq_offset = 0;
-    next_rand_offset = gen_address(&seed, cache_line_size, access_max); 
-
+    int iterations, seq_offset, rand_offset, pregen_offset, pregen_i = 0;
 
     iterations = N_OPERATIONS;
 
@@ -121,11 +122,8 @@ int main(int argc, char *argv[]){
         pregen_array = malloc(iterations);
         for(int i=0; i<iterations; i++)
             pregen_array[i] = gen_address(&seed, cache_line_size, access_max);
-        next_pregen_offset = pregen_array[pregen_i++];
     }
     
-    
-
     fd = perf_event_open(&pe, 0, -1, -1, 0);
     if (fd == -1) {
         fprintf(stderr, "Error opening leader %llx\n", pe.config);
@@ -140,32 +138,29 @@ int main(int argc, char *argv[]){
     for(int i = 0; i < iterations; i++){
         
 		if(op_seq){
-			seq_offset = next_seq_offset; 
-			next_seq_offset = (seq_offset + cache_line_size) % access_max;; 
+			seq_offset = (seq_offset + cache_line_size) % access_max;
 			if (op_prefetch){
-                __builtin_prefetch(data + next_seq_offset);
-                //TODO: waitloop
+                __builtin_prefetch(data + seq_offset);
+                waitloop(1000);
             }
 			access_memory(data + seq_offset);
 		}
 		
 		if(op_rand){
-			rand_offset = next_rand_offset; 
-			next_rand_offset = gen_address(&seed, cache_line_size, access_max); 
+			rand_offset = gen_address(&seed, cache_line_size, access_max);
 			if(op_prefetch){
-        	    __builtin_prefetch(data + next_rand_offset);
-                //TODO: waitloop
+        	    __builtin_prefetch(data + rand_offset);
+                waitloop(1000);
             }
 			access_memory(data + rand_offset);
 		}
 
 		if(op_pregen){
-			pregen_offset = next_pregen_offset;            
-			next_pregen_offset = pregen_array[pregen_i++];          
+			pregen_offset = pregen_array[pregen_i++];
             pregen_i = pregen_i % iterations;
             if(op_prefetch){
-                __builtin_prefetch(data + next_pregen_offset);
-                //TODO: waitloop
+                __builtin_prefetch(data + pregen_offset);
+                waitloop(1000);
             }
 			access_memory(data + pregen_offset);
 		}     
