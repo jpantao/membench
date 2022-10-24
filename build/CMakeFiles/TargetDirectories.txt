@@ -1,3 +1,0 @@
-/home/jpantao/git/membench/build/CMakeFiles/membench.dir
-/home/jpantao/git/membench/build/CMakeFiles/edit_cache.dir
-/home/jpantao/git/membench/build/CMakeFiles/rebuild_cache.dir

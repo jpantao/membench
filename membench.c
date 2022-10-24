@@ -41,7 +41,7 @@ static inline uint64_t access_memory(uint64_t *address){
     return fake;
 }
 
-static inline int gen_address(int* seed, int cacheline_size, int access_max){
+static inline int gen_address(unsigned int* seed, int cacheline_size, int access_max){
     return ((rand_r(seed) >> 3) <<3) % access_max;
 }
 
@@ -80,22 +80,7 @@ int main(int argc, char *argv[]){
     argparse(argc,argv);
 
     struct timeval tstart, tend;
-    // unsigned int seed = time(NULL);
     unsigned int seed = 0;
-
-    // setup perf_event (for more details: man perf_event_open)
-    int fd;
-    long long miss_count;
-    struct perf_event_attr pe;
-    memset(&pe, 0, sizeof(struct perf_event_attr));
-    pe.type = PERF_TYPE_HW_CACHE;
-    pe.size = sizeof(struct perf_event_attr);
-    pe.config = PERF_COUNT_HW_CACHE_LL |
-                PERF_COUNT_HW_CACHE_OP_READ << 8 |
-                PERF_COUNT_HW_CACHE_RESULT_MISS << 16;
-    pe.disabled = 1;
-    pe.exclude_kernel = 1;
-    pe.exclude_hv = 1;
     
     
     // Initialize data
@@ -108,71 +93,49 @@ int main(int argc, char *argv[]){
     int access_max = data_size / DATA_UNIT_SIZE;
     
     int iterations, seq_offset, rand_offset, pregen_offset = 0;
-    int next_seq_offset, next_rand_offset, next_pregen_offset, pregen_i = 0;
-
-    next_seq_offset = 0;
-    next_rand_offset = gen_address(&seed, cache_line_size, access_max); 
-
+    int next_seq_offset, next_rand_offset, next_pregen_offset = 0;
 
     iterations = N_OPERATIONS;
+
+    next_seq_offset = 0;
+    next_rand_offset = gen_address(&seed, cache_line_size, access_max);
+    next_pregen_offset = gen_address(&seed, cache_line_size, access_max);
 
     int* pregen_array;
     if(op_pregen){
         pregen_array = malloc(iterations);
         for(int i=0; i<iterations; i++)
             pregen_array[i] = gen_address(&seed, cache_line_size, access_max);
-        next_pregen_offset = pregen_array[pregen_i++];
-    }
-    
-    
-
-    fd = perf_event_open(&pe, 0, -1, -1, 0);
-    if (fd == -1) {
-        fprintf(stderr, "Error opening leader %llx\n", pe.config);
-        exit(EXIT_FAILURE);
     }
 
     gettimeofday(&tstart, NULL);
-
-    ioctl(fd, PERF_EVENT_IOC_RESET, 0);
-    ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
-
     for(int i = 0; i < iterations; i++){
         
 		if(op_seq){
 			seq_offset = next_seq_offset; 
 			next_seq_offset = (seq_offset + cache_line_size) % access_max;; 
-			if (op_prefetch){
+			if (op_prefetch)
                 __builtin_prefetch(data + next_seq_offset);
-                //TODO: waitloop
-            }
 			access_memory(data + seq_offset);
 		}
 		
 		if(op_rand){
 			rand_offset = next_rand_offset; 
 			next_rand_offset = gen_address(&seed, cache_line_size, access_max); 
-			if(op_prefetch){
+			if(op_prefetch)
         	    __builtin_prefetch(data + next_rand_offset);
-                //TODO: waitloop
-            }
 			access_memory(data + rand_offset);
 		}
 
 		if(op_pregen){
 			pregen_offset = next_pregen_offset;            
-			next_pregen_offset = pregen_array[pregen_i++];          
-            pregen_i = pregen_i % iterations;
-            if(op_prefetch){
+			next_pregen_offset = pregen_array[i];
+            if(op_prefetch)
                 __builtin_prefetch(data + next_pregen_offset);
-                //TODO: waitloop
-            }
 			access_memory(data + pregen_offset);
 		}     
 
     }
-
-    ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
     gettimeofday(&tend, NULL);
 
     unsigned long duration = time_diff(&tstart, &tend);

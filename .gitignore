@@ -15,5 +15,6 @@ cmake-build-debug
 
 .fleet
 .idea
+scripts/.idea
 
 membench-g5k/
