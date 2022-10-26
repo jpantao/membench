@@ -9,6 +9,8 @@ make
 
 mkdir -p logs
 log_file="logs/${test_name}.csv"
+rm ${log_file}
+
 echo "run,node_type,access_type,throughput,cache_misses" | tee -a ${log_file}
 for run in $(seq 1 ${n_runs}); do
   echo "------ run ${run} > ${log_file} ------"

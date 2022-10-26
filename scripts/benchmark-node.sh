@@ -16,22 +16,25 @@ function run_bench_2csv() {
     run_flag=$2
     prefetch_flag=$3
 
-    echo $perf_event
-    echo "perf record -e ${perf_event} numactl --membind=${numa_node} --cpubind=${cpu_node} ./membench -c ${run_flag} ${prefetch_flag} 2>/dev/null > tp"
     perf record -e ${perf_event} numactl --membind=${numa_node} --cpubind=${cpu_node} ./membench -c ${run_flag} ${prefetch_flag} 2>/dev/null > tp
+    echo "perf record -e ${perf_event} numactl --membind=${numa_node} --cpubind=${cpu_node} ./membench -c ${run_flag} ${prefetch_flag} 2>/dev/null > tp"
+    sleep 5
+    perf report --header | grep -E Event | sed 's/^.*: //' > lt
     throughput=$(cat tp)
-    cache_misses=$(perf report --header | grep -E Event | sed 's/^.*: //')
-    echo $cache_misses
-    exit
-    echo "${run_n},${node_type},${run_type}${prefetch_flag},${throughput},${cache_misses}" | tee -a ${log_file}
+    cache_misses=$(cat lt)
+#    echo $throughput
+#    echo $cache_misses
+    echo "${run_n},${node_type},${run_type},${throughput},${cache_misses}" | tee -a ${log_file}
     rm perf.data
+    sleep 5
 }
 
-run_bench_2csv "seq" -s
-run_bench_2csv "rnd" -r
-run_bench_2csv "pgn" -g
-run_bench_2csv "seq_prefetch" -s -p
-run_bench_2csv "rnd_prefetch" -r -p
-run_bench_2csv "pgn_prefetch" -g -p
+run_bench_2csv "seq" "-s"
+run_bench_2csv "rnd" "-r"
+run_bench_2csv "pgn" "-g"
+run_bench_2csv "seq_prefetch" "-s" "-p"
+run_bench_2csv "rnd_prefetch" "-r" "-p"
+run_bench_2csv "pgn_prefetch" "-g" "-p"
 
 rm tp
+rm lt
