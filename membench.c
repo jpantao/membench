@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH  (1024*1024*1024) // In bytes
-#define DEFAULT_WAITLOOP_ITERATIONS 1000000000 // 1M
+#define DEFAULT_WAITLOOP_ITERATIONS 100000000000 // 100M
 
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
 #define CACHE_LINE_SIZE     64 // In bytes
@@ -15,7 +15,7 @@
 
 
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
-int waitloop_iterations = DEFAULT_WAITLOOP_ITERATIONS;
+unsigned long waitloop_iterations = DEFAULT_WAITLOOP_ITERATIONS;
 
 void print_usage(char *exec_name) {
     printf("Usage: %s [OPTION]....\n", exec_name);
@@ -59,7 +59,7 @@ static inline int gen_address_CL64(unsigned int *seed, int access_max) {
     return ((rand_r(seed) >> 3) << 3) % access_max;
 }
 
-static inline void waitloop(int iterations) {
+static inline void waitloop(unsigned long iterations) {
     while (iterations--) {
         __asm__ __volatile__("");
     }
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
     int access_max = data_size / DATA_UNIT_SIZE;
 
-    int iterations, seq_offset, rand_offset, pregen_offset, pregen_i = 0;
+    int iterations, seq_offset, rand_offset, pregen_offset;
 
     iterations = N_OPERATIONS;
 
@@ -154,8 +154,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (op_pregen) {
-            pregen_offset = pregen_array[pregen_i++];
-            pregen_i = pregen_i % iterations;
+            pregen_offset = pregen_array[i++];
             if (op_prefetch) {
                 __builtin_prefetch(data + pregen_offset);
                 waitloop(waitloop_iterations);
