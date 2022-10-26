@@ -1,17 +1,37 @@
 #!/bin/bash
 
 # usage:
-# ./scripts/bennchmark-node.sh <numa_node> <node_type> <log_file> <run_n>
+# ./scripts/benchmark-node.sh <numa_node> <node_type> <log_file> <run_n>
 
-numa_node=$1 
+numa_node=$1
 node_type=$2
-log_file=$3
-run_n=$4
+perf_event=$3
+cpu_node=$4
+log_file=$5
+run_n=$6
 
-# echo "run,node_type,access_type,throughput,cache_misses" | tee -a ${log_file}
-echo "${run_n},${node_type},seq,$(numactl --membind=${numa_node} ./membench -c -s)" | tee -a ${log_file}
-echo "${run_n},${node_type},rnd,$(numactl --membind=${numa_node} ./membench -c -r)" | tee -a ${log_file}
-echo "${run_n},${node_type},pgn,$(numactl --membind=${numa_node} ./membench -c -g)" | tee -a ${log_file}
-echo "${run_n},${node_type},seq_prefetch,$(numactl --membind=${numa_node} ./membench -c -s -p)" | tee -a ${log_file}
-echo "${run_n},${node_type},rnd_prefetch,$(numactl --membind=${numa_node} ./membench -c -r -p)" | tee -a ${log_file}
-echo "${run_n},${node_type},pgn_prefetch,$(numactl --membind=${numa_node} ./membench -c -g -p)" | tee -a ${log_file}
+
+function run_bench_2csv() {
+    run_type=$1
+    run_flag=$2
+    prefetch_flag=$3
+
+    echo $perf_event
+    echo "perf record -e ${perf_event} numactl --membind=${numa_node} --cpubind=${cpu_node} ./membench -c ${run_flag} ${prefetch_flag} 2>/dev/null > tp"
+    perf record -e ${perf_event} numactl --membind=${numa_node} --cpubind=${cpu_node} ./membench -c ${run_flag} ${prefetch_flag} 2>/dev/null > tp
+    throughput=$(cat tp)
+    cache_misses=$(perf report --header | grep -E Event | sed 's/^.*: //')
+    echo $cache_misses
+    exit
+    echo "${run_n},${node_type},${run_type}${prefetch_flag},${throughput},${cache_misses}" | tee -a ${log_file}
+    rm perf.data
+}
+
+run_bench_2csv "seq" -s
+run_bench_2csv "rnd" -r
+run_bench_2csv "pgn" -g
+run_bench_2csv "seq_prefetch" -s -p
+run_bench_2csv "rnd_prefetch" -r -p
+run_bench_2csv "pgn_prefetch" -g -p
+
+rm tp

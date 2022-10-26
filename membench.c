@@ -52,46 +52,46 @@ void argparse(int argc, char *argv[]){
 
         if(token[0] != '-')
             continue;
-        
+
         switch (token[1]){
-        	case 's':
-				op_seq = true; 
-            	break;
-			case 'r':
-				op_rand = true;
-            	break;
-			case 'g':
-				op_pregen = true;
-            	break;
-			case 'p':
-				op_prefetch = true;
-            	break;
-			case 'c':
-				op_csv = true;
-            	break;
-        	default:
-				printf("Uknown option: %s\n", token);
+            case 's':
+                op_seq = true;
+                break;
+            case 'r':
+                op_rand = true;
+                break;
+            case 'g':
+                op_pregen = true;
+                break;
+            case 'p':
+                op_prefetch = true;
+                break;
+            case 'c':
+                op_csv = true;
+                break;
+            default:
+                printf("Uknown option: %s\n", token);
         }
     }
 
 }
 
-int main(int argc, char *argv[]){  
+int main(int argc, char *argv[]){
     argparse(argc,argv);
 
     struct timeval tstart, tend;
     unsigned int seed = 0;
-    
-    
+
+
     // Initialize data
     int data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH;
     uint64_t* data =  malloc(data_size);
 
-    memset(data, 0, data_size); 
-    
+    memset(data, 0, data_size);
+
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
     int access_max = data_size / DATA_UNIT_SIZE;
-    
+
     int iterations, seq_offset, rand_offset, pregen_offset = 0;
     int next_seq_offset, next_rand_offset, next_pregen_offset = 0;
 
@@ -110,45 +110,43 @@ int main(int argc, char *argv[]){
 
     gettimeofday(&tstart, NULL);
     for(int i = 0; i < iterations; i++){
-        
-		if(op_seq){
-			seq_offset = next_seq_offset; 
-			next_seq_offset = (seq_offset + cache_line_size) % access_max;; 
-			if (op_prefetch)
-                __builtin_prefetch(data + next_seq_offset);
-			access_memory(data + seq_offset);
-		}
-		
-		if(op_rand){
-			rand_offset = next_rand_offset; 
-			next_rand_offset = gen_address(&seed, cache_line_size, access_max); 
-			if(op_prefetch)
-        	    __builtin_prefetch(data + next_rand_offset);
-			access_memory(data + rand_offset);
-		}
 
-		if(op_pregen){
-			pregen_offset = next_pregen_offset;            
-			next_pregen_offset = pregen_array[i];
+        if(op_seq){
+            seq_offset = next_seq_offset;
+            next_seq_offset = (seq_offset + cache_line_size) % access_max;;
+            if (op_prefetch)
+                __builtin_prefetch(data + next_seq_offset);
+            access_memory(data + seq_offset);
+        }
+
+        if(op_rand){
+            rand_offset = next_rand_offset;
+            next_rand_offset = gen_address(&seed, cache_line_size, access_max);
+            if(op_prefetch)
+                __builtin_prefetch(data + next_rand_offset);
+            access_memory(data + rand_offset);
+        }
+
+        if(op_pregen){
+            pregen_offset = next_pregen_offset;
+            next_pregen_offset = pregen_array[i];
             if(op_prefetch)
                 __builtin_prefetch(data + next_pregen_offset);
-			access_memory(data + pregen_offset);
-		}     
+            access_memory(data + pregen_offset);
+        }
 
     }
     gettimeofday(&tend, NULL);
 
     unsigned long duration = time_diff(&tstart, &tend);
-    read(fd, &miss_count, sizeof(long long));
 
-    int tp = iterations/(duration / 1000);
+    unsigned long int tp = iterations/(duration / 1000);
 
     if(op_csv){
-        printf("%ld,%lld\n", tp, miss_count);
+        printf("%ld\n", tp);
     }else {
-        printf("troughput: %ld op/ms\n", tp);
-        printf("cache_misses: %lld \n", miss_count);
+        printf("throughput: %ld op/ms\n", tp);
     }
-    
+
     return 0;
 }

@@ -1,4 +1,4 @@
- #!/bin/bash
+#!/bin/bash
 
 
 node=$(uniq "$OAR_NODE_FILE" | head -n 1)
@@ -9,4 +9,4 @@ ssh root@"$node" 'apt install -y cmake linux-perf'
 ssh root@"$node" 'echo "jantao  ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers'
 ssh root@"$node" 'ndctl create-namespace --mode=devdax --map=mem'
 ssh root@"$node" 'daxctl reconfigure-device dax1.0 --mode=system-ram'
-
+ssh root@"$node" 'sysctl -w kernel.perf_event_paranoid=1'
