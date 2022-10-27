@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH  (1024*1024*1024) // In bytes
-#define DEFAULT_WAITLOOP_ITERATIONS 100000000000 // 100M
+#define DEFAULT_WAITLOOP_ITERATIONS 500 // 1M
 
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
 #define CACHE_LINE_SIZE     64 // In bytes
@@ -133,6 +133,7 @@ int main(int argc, char *argv[]) {
 
     gettimeofday(&tstart, NULL);
 
+//    printf("%lu\n", waitloop_iterations);
     for (int i = 0; i < iterations; i++) {
 
         if (op_seq) {

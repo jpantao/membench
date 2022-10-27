@@ -10,14 +10,13 @@ cpu_node=$4
 log_file=$5
 run_n=$6
 
-
 function run_bench_2csv() {
     run_type=$1
     run_flag=$2
     prefetch_flag=$3
 
+    echo "numactl --membind=${numa_node} --cpubind=${cpu_node} perf record -e ${perf_event} ./membench -c ${run_flag} ${prefetch_flag}"
     numactl --membind=${numa_node} --cpubind=${cpu_node} perf record -e ${perf_event} ./membench -c ${run_flag} ${prefetch_flag} 2>/dev/null > tp
-    echo "numactl --membind=${numa_node} --cpubind=${cpu_node} perf record -e ${perf_event} ./membench -c ${run_flag} ${prefetch_flag} 2>/dev/null > tp"
     sleep 5
     perf report --header | grep -E Event | sed 's/^.*: //' > lt
     throughput=$(cat tp)
@@ -26,8 +25,9 @@ function run_bench_2csv() {
 #    echo $cache_misses
     echo "${run_n},${node_type},${run_type},${throughput},${cache_misses}" | tee -a ${log_file}
     rm perf.data
-    sleep 5
 }
+
+#perf_event="cache-misses:u"
 
 run_bench_2csv "seq" "-s"
 run_bench_2csv "rnd" "-r"
