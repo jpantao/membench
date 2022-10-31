@@ -15,7 +15,7 @@ function run_bench_2csv() {
     run_flag=$2
     prefetch_flag=$3
 
-    echo "numactl --membind=${numa_node} --cpubind=${cpu_node} perf record -e ${perf_event} ./membench -c ${run_flag} ${prefetch_flag}"
+#    echo "numactl --membind=${numa_node} --cpubind=${cpu_node} perf record -e ${perf_event} ./membench -c ${run_flag} ${prefetch_flag}"
     numactl --membind=${numa_node} --cpubind=${cpu_node} perf record -e ${perf_event} ./membench -c ${run_flag} ${prefetch_flag} 2>/dev/null > tp
     sleep 5
     perf report --header | grep -E Event | sed 's/^.*: //' > lt

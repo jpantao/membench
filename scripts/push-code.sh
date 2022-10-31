@@ -12,6 +12,7 @@ rm -rf $remote_dir
 mkdir -p $remote_dir
 cp -r ./scripts $remote_dir
 cp membench.c $remote_dir
+cp simplebench.c $remote_dir
 cp CMakeLists.txt $remote_dir
 
 

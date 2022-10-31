@@ -125,11 +125,10 @@ int main(int argc, char *argv[]) {
     iterations = N_OPERATIONS;
 
     int *pregen_array;
-    if (op_pregen) {
-        pregen_array = malloc(iterations);
-        for (int i = 0; i < iterations; i++)
-            pregen_array[i] = gen_address_CL64(&seed, access_max);
-    }
+    pregen_array = malloc(iterations);
+    for (int i = 0; i < iterations; i++)
+        pregen_array[i] = gen_address_CL64(&seed, access_max);
+
 
     gettimeofday(&tstart, NULL);
 
@@ -140,8 +139,8 @@ int main(int argc, char *argv[]) {
             seq_offset = (seq_offset + cache_line_size) % access_max;
             if (op_prefetch) {
                 __builtin_prefetch(data + seq_offset);
-                waitloop(waitloop_iterations);
             }
+            waitloop(waitloop_iterations);
             access_memory(data + seq_offset);
         }
 
@@ -149,8 +148,8 @@ int main(int argc, char *argv[]) {
             rand_offset = gen_address_CL64(&seed, access_max);
             if (op_prefetch) {
                 __builtin_prefetch(data + rand_offset);
-                waitloop(waitloop_iterations);
             }
+            waitloop(waitloop_iterations);
             access_memory(data + rand_offset);
         }
 
@@ -158,8 +157,8 @@ int main(int argc, char *argv[]) {
             pregen_offset = pregen_array[i++];
             if (op_prefetch) {
                 __builtin_prefetch(data + pregen_offset);
-                waitloop(waitloop_iterations);
             }
+            waitloop(waitloop_iterations);
             access_memory(data + pregen_offset);
         }
 

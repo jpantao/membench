@@ -7,3 +7,4 @@ add_executable(membench membench.c)
 # target_link_libraries(membench numa)
 # target_compile_options(membench PRIVATE -g -pthread)
 
+add_executable(simplebench simplebench.c)
