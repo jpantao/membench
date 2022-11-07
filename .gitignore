@@ -17,3 +17,8 @@ cmake-build-debug
 .idea
 
 membench-g5k/
+perf.data
+
+cm
+
+tp

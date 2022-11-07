@@ -112,15 +112,15 @@ int main(int argc, char *argv[]) {
     unsigned int seed = 0;
 
     // Initialize data
-    int data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH;
+    unsigned long data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH;
     uint64_t *data = malloc(data_size);
 
-    memset(data, 0, data_size);
+    memset(data, 1, data_size);
 
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
-    int access_max = data_size / DATA_UNIT_SIZE;
+    unsigned long access_max = data_size / DATA_UNIT_SIZE;
 
-    int iterations, seq_offset, rand_offset, pregen_offset;
+    unsigned long iterations, seq_offset, rand_offset, pregen_offset;
 
     iterations = N_OPERATIONS;
 

@@ -1,0 +1,2 @@
+run,node_type,access_type,waitloop_iter,throughput,cache_misses
+1,dram,seq,10,,
