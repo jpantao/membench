@@ -17,3 +17,5 @@ cmake-build-debug
 .idea
 
 membench-g5k/
+membench
+simplebench
