@@ -7,17 +7,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def plot_access(df, access_pattern, metric, node_type=None):
+def plot_access(df, access_pattern, metric, node_type=None, logy=False):
     if node_type is None:
-        df_loc = df[((df['access_type'] == f'{access_pattern}_prefetch') | (df['access_type'] == access_pattern))]
+        df_loc = df[((df['access_pattern'] == f'{access_pattern}_prefetch') | (df['access_pattern'] == access_pattern))]
     else:
-        df_loc = df[((df['access_type'] == f'{access_pattern}_prefetch') | (df['access_type'] == access_pattern)) & (
-                df['node_type'] == node_type)]
+        df_loc = df[((df['access_pattern'] == f'{access_pattern}_prefetch') | (df['access_pattern'] == access_pattern))
+                    & (df['node_type'] == node_type)]
 
-    means = df_loc.pivot_table(metric, 'waitloop_iter', ['access_type', 'node_type'], aggfunc='mean')
-    errors = df_loc.pivot_table(metric, 'waitloop_iter', ['access_type', 'node_type'], aggfunc='std')
-    means.plot(style='.-')
-    plt.savefig(f'figs/{access_pattern}_{metric}.jpeg')
+    means = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='mean')
+    errors = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='std')
+
+    means.plot(style='.-', logy=logy)
+    plt.title(f'{metric} for {access_pattern} access pattern')
+    plt.savefig(f'{out_dir}/{access_pattern}_{metric}.jpeg')
 
 
 def main():
@@ -28,9 +30,9 @@ def main():
 
     for p in patterns:
         plot_access(df, p, 'throughput')
-        plot_access(df, p, 'cache_misses')
+        plot_access(df, p, 'cache_misses', logy=True)
 
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':
@@ -40,5 +42,8 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', '-o', dest='out_dir', default='figs', help='plots directory (default=./figs)')
     parser.add_argument('csv_file', action='store', help='CSV input file')
     args = parser.parse_args()
-    os.makedirs('figs', exist_ok=True)
+
+    test_name = os.path.basename(args.csv_file).split('.')[0]
+    out_dir = f'{args.out_dir}/{test_name}'
+    os.makedirs(f'{out_dir}', exist_ok=True)
     main()

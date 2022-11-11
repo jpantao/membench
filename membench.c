@@ -5,8 +5,8 @@
 #include <sys/time.h>
 #include <stdbool.h>
 
-#define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH  (1024*1024*1024) // In bytes
-#define DEFAULT_WAITLOOP_ITERATIONS 500 // 1M
+#define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH (1024*1024*1024) // In bytes (1GB)
+#define DEFAULT_SPINLOOP_ITERATIONS 500 // 1M
 
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
 #define CACHE_LINE_SIZE     64 // In bytes
@@ -15,7 +15,7 @@
 
 
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
-unsigned long waitloop_iterations = DEFAULT_WAITLOOP_ITERATIONS;
+unsigned long spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
 
 void print_usage(char *exec_name) {
     printf("Usage: %s [OPTION]....\n", exec_name);
@@ -33,8 +33,8 @@ void print_help(char *exec_name) {
     printf("\n");
     printf("Processor cache prefetch options:\n");
     printf("  -p\t\tprefetch data to processor cache before each access (default=do not use prefetch)\n");
-    printf("  -w iterations\tnumber of iterations for the waitloop after each prefetch (default=%d)\n",
-           DEFAULT_WAITLOOP_ITERATIONS);
+    printf("  -w iterations\tnumber of iterations for the spinloop after each prefetch (default=%d)\n",
+           DEFAULT_SPINLOOP_ITERATIONS);
     printf("\n");
     printf("Output control:\n");
     printf("  -c\t\toutput in csv format (throughput,cache_misses)\n");
@@ -59,7 +59,7 @@ static inline int gen_address_CL64(unsigned int *seed, int access_max) {
     return ((rand_r(seed) >> 3) << 3) % access_max;
 }
 
-static inline void waitloop(unsigned long iterations) {
+static inline void spinloop(unsigned long iterations) {
     while (iterations--) {
         __asm__ __volatile__("");
     }
@@ -90,7 +90,7 @@ void argparse(int argc, char *argv[]) {
                 op_csv = true;
                 break;
             case 'w':
-                waitloop_iterations = atoi(argv[++i]);
+                spinloop_iterations = atoi(argv[++i]);
                 break;
             case 'h':
                 print_help(argv[0]);
@@ -112,9 +112,10 @@ int main(int argc, char *argv[]) {
     unsigned int seed = 0;
 
     // Initialize data
-    unsigned long data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH;
+    long data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH;
     uint64_t *data = malloc(data_size);
 
+    //TODO: preencher valores aleatorios
     memset(data, 1, data_size);
 
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
@@ -132,7 +133,7 @@ int main(int argc, char *argv[]) {
 
     gettimeofday(&tstart, NULL);
 
-//    printf("%lu\n", waitloop_iterations);
+//    printf("%lu\n", spinloop_iterations);
     for (int i = 0; i < iterations; i++) {
 
         if (op_seq) {
@@ -140,7 +141,7 @@ int main(int argc, char *argv[]) {
             if (op_prefetch) {
                 __builtin_prefetch(data + seq_offset);
             }
-            waitloop(waitloop_iterations);
+            spinloop(spinloop_iterations);
             access_memory(data + seq_offset);
         }
 
@@ -149,16 +150,16 @@ int main(int argc, char *argv[]) {
             if (op_prefetch) {
                 __builtin_prefetch(data + rand_offset);
             }
-            waitloop(waitloop_iterations);
+            spinloop(spinloop_iterations);
             access_memory(data + rand_offset);
         }
 
         if (op_pregen) {
-            pregen_offset = pregen_array[i++];
+            pregen_offset = pregen_array[i];
             if (op_prefetch) {
                 __builtin_prefetch(data + pregen_offset);
             }
-            waitloop(waitloop_iterations);
+            spinloop(spinloop_iterations);
             access_memory(data + pregen_offset);
         }
 

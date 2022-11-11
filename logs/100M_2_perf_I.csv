@@ -1,4 +1,0 @@
-run,node_type,access_type,throughput,cache_misses
-1,dram,seq,98231,400028
-1,dram,rnd,26609,96206734
-1,dram,pgn,74294,48703409

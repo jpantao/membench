@@ -1,4 +1,4 @@
-run,node_type,access_type,waitloop_iter,throughput,cache_misses
+run,node_kind,access_pattern,spinloop_iterations,throughput,cache_misses
 1,dram,seq,0,79744,104633115
 1,dram,rnd,0,24906,102902954
 1,dram,pgn,0,69252,60193928

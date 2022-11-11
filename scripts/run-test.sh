@@ -11,12 +11,12 @@ mkdir -p logs
 log_file="logs/${test_name}.csv"
 rm ${log_file}
 
-echo "run,node_type,access_type,waitloop_iter,throughput,cache_misses" | tee -a "${log_file}"
+echo "run,node_kind,access_pattern,spinloop_iterations,throughput,cache_misses" | tee -a "${log_file}"
 
 for run in $(seq 1 "${n_runs}"); do
   for w in $(seq 0 50 500); do
     echo "------ run ${run} > ${log_file} ------"
-    ./scripts/benchmark-node.sh 0 "dram" "cache-misses:u" 0 "${w}" "${log_file}" "${run}"
-    ./scripts/benchmark-node.sh 3 "pmem" "cache-misses:u" 1 "${w}" "${log_file}" "${run}"
+    ./scripts/benchmark-node.sh 0 "dram" "LLC-load-misses" 0 "${w}" "${log_file}" "${run}"
+    ./scripts/benchmark-node.sh 3 "pmem" "LLC-load-misses" 1 "${w}" "${log_file}" "${run}"
   done
 done
