@@ -100,10 +100,21 @@ void argparse(int argc, char *argv[]) {
                 print_usage(argv[0]);
                 exit(0);
         }
+
+        if (op_seq && op_rand || op_seq && op_pregen || op_rand && op_pregen) {
+            printf("Only one access type can be specified.\n");
+            print_usage(argv[0]);
+            exit(0);
+        }
     }
 
 }
 
+void memset_random(uint64_t *data, int size) {
+    for (int i = 0; i < size; i++) {
+        data[i] = rand();
+    }
+}
 
 int main(int argc, char *argv[]) {
     argparse(argc, argv);
@@ -113,56 +124,36 @@ int main(int argc, char *argv[]) {
 
     // Initialize data
     long data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH;
-    uint64_t *data = malloc(data_size);
-
-    //TODO: preencher valores aleatorios
-    memset(data, 1, data_size);
-
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
-    unsigned long access_max = data_size / DATA_UNIT_SIZE;
+    unsigned long data_len = data_size / DATA_UNIT_SIZE;
 
-    unsigned long iterations, seq_offset, rand_offset, pregen_offset;
+    uint64_t *data = malloc(data_size);
+    memset_random(data, data_len);
 
-    iterations = N_OPERATIONS;
+    int iterations = N_OPERATIONS;
 
     int *pregen_array;
     pregen_array = malloc(iterations);
     for (int i = 0; i < iterations; i++)
-        pregen_array[i] = gen_address_CL64(&seed, access_max);
+        pregen_array[i] = gen_address_CL64(&seed, data_len);
 
 
+    unsigned long offset = 0;
     gettimeofday(&tstart, NULL);
 
-//    printf("%lu\n", spinloop_iterations);
     for (int i = 0; i < iterations; i++) {
 
-        if (op_seq) {
-            seq_offset = (seq_offset + cache_line_size) % access_max;
-            if (op_prefetch) {
-                __builtin_prefetch(data + seq_offset);
-            }
-            spinloop(spinloop_iterations);
-            access_memory(data + seq_offset);
-        }
+        if (op_seq)
+            offset = (offset + cache_line_size) % data_len;
+        else if (op_rand)
+            offset = gen_address_CL64(&seed, data_len);
+        else if (op_pregen)
+            offset = pregen_array[i];
 
-        if (op_rand) {
-            rand_offset = gen_address_CL64(&seed, access_max);
-            if (op_prefetch) {
-                __builtin_prefetch(data + rand_offset);
-            }
-            spinloop(spinloop_iterations);
-            access_memory(data + rand_offset);
-        }
-
-        if (op_pregen) {
-            pregen_offset = pregen_array[i];
-            if (op_prefetch) {
-                __builtin_prefetch(data + pregen_offset);
-            }
-            spinloop(spinloop_iterations);
-            access_memory(data + pregen_offset);
-        }
-
+        if (op_prefetch)
+            __builtin_prefetch(data + offset);
+        spinloop(spinloop_iterations);
+        access_memory(data + offset);
     }
 
     gettimeofday(&tend, NULL);
@@ -170,11 +161,8 @@ int main(int argc, char *argv[]) {
     unsigned long duration = time_diff(&tstart, &tend);
     unsigned long tp = iterations / (duration / 1000);
 
-    if (op_csv) {
-        printf("%ld\n", tp);
-    } else {
-        printf("throughput: %ld op/ms\n", tp);
-    }
+    if (op_csv) printf("%ld\n", tp);
+    else printf("throughput: %ld op/ms\n", tp);
 
     return 0;
 }
