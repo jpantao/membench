@@ -49,17 +49,17 @@ unsigned long time_diff(struct timeval *start, struct timeval *stop) {
     return 1000000 * sec_res + usec_res;
 }
 
-static inline uint64_t access_memory(const uint64_t *address) {
+static __inline__ uint64_t access_memory(const uint64_t *address) {
     uint64_t fake = 0;
     fake += *address;
     return fake;
 }
 
-static inline int gen_address_CL64(unsigned int *seed, int access_max) {
+static __inline__ int gen_address_CL64(unsigned int *seed, int access_max) {
     return ((rand_r(seed) >> 3) << 3) % access_max;
 }
 
-static inline void spinloop(unsigned long iterations) {
+static __inline__ void spinloop(unsigned long iterations) {
     while (iterations--) {
         __asm__ __volatile__("");
     }
