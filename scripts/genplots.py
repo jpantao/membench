@@ -37,7 +37,7 @@ def genplots(csv_file):
 
 
 if __name__ == '__main__':
-    warnings.filterwarnings("ignore", category=UserWarning)
+
     pd.set_option('display.float_format', lambda x: '%.5f' % x)
 
     parser = argparse.ArgumentParser(description='Generate plots from YCSB and numastat csvs')
@@ -46,7 +46,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     test_name = os.path.basename(args.input).split('.')[0]
-    print(test_name)
     out_dir = f'{args.out_dir}/{test_name}'
     os.makedirs(f'{out_dir}', exist_ok=True)
+
+    print(f'Generating plots for {test_name}')
     genplots(args.input)
+    print(f'Plots saved in {out_dir}')

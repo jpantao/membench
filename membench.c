@@ -138,6 +138,9 @@ int main(int argc, char *argv[]) {
         pregen_array[i] = gen_address_CL64(&seed, data_len);
 
 
+    struct timeval spinloop_tstart, spinloop_tend;
+    unsigned long spinloop_duration = 0;
+
     unsigned long offset = 0;
     gettimeofday(&tstart, NULL);
 
@@ -152,13 +155,17 @@ int main(int argc, char *argv[]) {
 
         if (op_prefetch)
             __builtin_prefetch(data + offset);
+        gettimeofday(&spinloop_tstart, NULL);
         spinloop(spinloop_iterations);
+        gettimeofday(&spinloop_tend, NULL);
+        spinloop_duration += time_diff(&spinloop_tstart, &spinloop_tend);
+
         access_memory(data + offset);
     }
 
     gettimeofday(&tend, NULL);
 
-    unsigned long duration = time_diff(&tstart, &tend);
+    unsigned long duration = time_diff(&tstart, &tend) - spinloop_duration;
     unsigned long tp = iterations / (duration / 1000);
 
     if (op_csv) printf("%ld\n", tp);
