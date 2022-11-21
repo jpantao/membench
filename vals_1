@@ -1,0 +1,21 @@
+
+ Performance counter stats for './membench -g -w 0':
+
+         1,784,322      l1d_pend_miss.pending:u                                              (36.18%)
+         1,527,746      l1d_pend_miss.pending_cycles:u                                       (36.30%)
+        16,323,029      l1d.replacement:u                                                    (36.43%)
+           219,271      l1d_pend_miss.fb_full:u                                              (36.55%)
+                 0      sw_prefetch_access.nta:u                                             (36.54%)
+                 0      sw_prefetch_access.prefetchw:u                                       (36.56%)
+                 0      sw_prefetch_access.t0:u                                              (36.54%)
+                 0      sw_prefetch_access.t1_t2:u                                           (36.42%)
+        16,852,375      L1-dcache-load-misses:u          #    0.56% of all L1-dcache accesses  (36.29%)
+     2,992,061,608      L1-dcache-loads:u                                                    (36.15%)
+     1,625,619,143      L1-dcache-stores:u                                                   (36.04%)
+
+       2.364673479 seconds time elapsed
+
+       2.264938000 seconds user
+       0.086331000 seconds sys
+
+

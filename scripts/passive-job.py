@@ -5,38 +5,14 @@ import paramiko
 import argparse
 import subprocess
 
-PERF_EVENTS = [
-    "cache-misses",
-    "L1-dcache-load-misses",
-    "L1-dcache-loads",
-    "LLC-load-misses",
-    "LLC-loads",
-    "LLC-store-misses",
-    "LLC-stores",
-    "l1d_pend_miss.pending",
-    "l1d_pend_miss.pending_cycles",
-    "l1d.replacement",
-    "l1d_pend_miss.fb_full",
-    "sw_prefetch_access.nta",
-    "sw_prefetch_access.prefetchw",
-    "sw_prefetch_access.t0",
-    "sw_prefetch_access.t1_t2",
-    "branch-misses",
-    "branches",
-    "cpu-cycles",
-    "instructions"
-]
-
-
-def deploy_kadeploy_img():
-    print("Deploying reservation")
-    subprocess.run(["scripts/deploy.sh"])
-    return get_reservation_node()
-
 
 def get_reservation_node():
     print("Getting reservation node")
-    with open(os.getenv('OAR_NODE_FILE')) as f:
+    filename = os.getenv('OAR_NODE_FILE')
+    if filename is None:
+        print('No node found in OAR_NODE_FILE')
+        exit(1)
+    with open(filename) as f:
         return f.readline().strip()
 
 
@@ -54,11 +30,6 @@ def paramiko_exec(ssh, cmd):
     return stdout.readlines()
 
 
-def run_test(n_runs, out_csv):
-    print("Running test")
-
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Deploy membench test')
     parser.add_argument('--n-runs', '-n', dest='n_runs', default=3, help='Number of runs (default=3)')
@@ -67,6 +38,9 @@ if __name__ == '__main__':
 
     out = f'logs/{args.test_name}.log'
 
-    hostname = deploy_kadeploy_img()
+    # kadeploy
+    subprocess.run(["scripts/deploy.sh"])
+
+    hostname = get_reservation_node()
     host = paramiko_connect(hostname, os.getenv('USER'))
-    paramiko_exec(host, f"scripts/run-test.sh {args.n_runs} {out}")
+    paramiko_exec(host, f'cd {os.getcwd()} scripts/membench-test.sh {args.n_runs} {out}')

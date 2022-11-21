@@ -6,13 +6,12 @@
 #include <stdbool.h>
 
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH (1024*1024*1024) // In bytes (1GB)
-#define DEFAULT_SPINLOOP_ITERATIONS 500 // 1M
+#define DEFAULT_SPINLOOP_ITERATIONS 0
 
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
 #define CACHE_LINE_SIZE     64 // In bytes
 
 #define N_OPERATIONS        100000000
-
 
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 unsigned long spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
@@ -43,23 +42,23 @@ void print_help(char *exec_name) {
     printf("  -h\t\tprint this message\n");
 }
 
-unsigned long time_diff(struct timeval *start, struct timeval *stop) {
-    unsigned long sec_res = stop->tv_sec - start->tv_sec;
-    unsigned long usec_res = stop->tv_usec - start->tv_usec;
-    return 1000000 * sec_res + usec_res;
-}
-
 static __inline__ uint64_t access_memory(const uint64_t *address) {
-    uint64_t fake = 0;
+    register uint64_t fake = 0;
     fake += *address;
     return fake;
+}
+
+static __inline__ unsigned long time_diff(struct timeval *start, struct timeval *stop) {
+    register unsigned long sec_res = stop->tv_sec - start->tv_sec;
+    register unsigned long usec_res = stop->tv_usec - start->tv_usec;
+    return 1000000 * sec_res + usec_res;
 }
 
 static __inline__ int gen_address_CL64(unsigned int *seed, int access_max) {
     return ((rand_r(seed) >> 3) << 3) % access_max;
 }
 
-static __inline__ void spinloop(unsigned long iterations) {
+static __inline__ void spinloop(register unsigned long iterations) {
     while (iterations--) {
         __asm__ __volatile__("");
     }
@@ -110,7 +109,7 @@ void argparse(int argc, char *argv[]) {
 
 }
 
-void memset_random(uint64_t *data, int size) {
+void memset_random(uint64_t *data, unsigned long size) {
     for (int i = 0; i < size; i++) {
         data[i] = rand();
     }
@@ -133,22 +132,17 @@ int main(int argc, char *argv[]) {
     int iterations = N_OPERATIONS;
 
     int *pregen_array;
-    pregen_array = malloc(iterations);
+    pregen_array = malloc(iterations * sizeof(int));
     for (int i = 0; i < iterations; i++)
         pregen_array[i] = gen_address_CL64(&seed, data_len);
 
-
     struct timeval spinloop_tstart, spinloop_tend;
-    gettimeofday(&spinloop_tstart, NULL);
-    spinloop(spinloop_iterations);
-    gettimeofday(&spinloop_tend, NULL);
-    unsigned long spinloop_duration = time_diff(&spinloop_tstart, &spinloop_tend);
-
+    unsigned long spinloop_duration = 0;
 
     unsigned long offset = 0;
     gettimeofday(&tstart, NULL);
 
-    for (int i = 0; i < iterations; i++) {
+    for (int i = 0; i < N_OPERATIONS; i++) {
 
         if (op_seq)
             offset = (offset + cache_line_size) % data_len;
@@ -158,14 +152,19 @@ int main(int argc, char *argv[]) {
             offset = pregen_array[i];
 
         if (op_prefetch)
-            __builtin_prefetch(data + offset);
+            __builtin_prefetch(data + offset, 0, 0);
+
+        gettimeofday(&spinloop_tstart, NULL);
         spinloop(spinloop_iterations);
+        gettimeofday(&spinloop_tend, NULL);
+        spinloop_duration += time_diff(&spinloop_tstart, &spinloop_tend);
+
         access_memory(data + offset);
     }
 
     gettimeofday(&tend, NULL);
 
-    unsigned long duration = time_diff(&tstart, &tend) - (spinloop_duration*iterations);
+    unsigned long duration = time_diff(&tstart, &tend) - (spinloop_duration);
     unsigned long tp = iterations / (duration / 1000);
 
     if (op_csv) printf("%ld\n", tp);

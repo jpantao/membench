@@ -5,18 +5,18 @@
 
 numa_node=$1
 node_type=$2
-perf_event=$3
-cpu_node=$4
+cpu_node=$3
+perf_event_list=$4
 waitloop_iter=$5
-log_file=$6
-run_n=$7
+run_n=$6
+log_file=$7
 
 function run_bench_2csv() {
   run_type=$1
   run_flag=$2
   prefetch_flag=$3
 
-  (numactl --membind="${numa_node}" --cpubind="${cpu_node}" perf stat -e "${perf_event}" ./membench -c "${run_flag}" "${prefetch_flag}" -w "${waitloop_iter}" > tp) 2>&1 | grep "${perf_event}" | awk '{print $1}' | sed 's/,//g' > cm
+  (numactl --membind="${numa_node}" --cpubind="${cpu_node}" perf stat -e "${perf_event_list}" ./membench -c "${run_flag}" "${prefetch_flag}" -w "${waitloop_iter}" -x '\t'> tp)  2>&1 | awk -F '\t' '{print $1}' | paste -d -s  > cm
   throughput=$(cat tp)
   cache_misses=$(cat cm)
 

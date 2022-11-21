@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def plot_access(df, access_pattern, metric, node_type=None, logy=False):
+def plot_access(df, access_pattern, metric, node_type=None, logy=False, ymax=None):
     if node_type is None:
         df_loc = df[((df['access_pattern'] == f'{access_pattern}_prefetch') | (df['access_pattern'] == access_pattern))]
     else:
@@ -18,9 +18,8 @@ def plot_access(df, access_pattern, metric, node_type=None, logy=False):
     means = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='mean')
     errors = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='std')
 
-    ax = plt.gca()
-    ax.set_ylim(0, 10000)
-    means.plot(style='.-', logy=logy, ylim=([0, means.max().max() + means.min().min()]))
+    ymax = means.max().max() * 1.1 if ymax is None else ymax
+    means.plot(style='.-', logy=logy, ylim=([0, ymax]))
     plt.title(f'{metric} for {access_pattern} access pattern')
     plt.savefig(f'{out_dir}/{access_pattern}_{metric}.jpeg')
 
@@ -32,12 +31,11 @@ def genplots(csv_file):
     patterns = ['seq', 'rnd', 'pgn']
 
     for p in patterns:
-        plot_access(df, p, 'throughput')
-        plot_access(df, p, 'cache_misses', logy=False)
+        plot_access(df, p, 'throughput', ymax=4e4)
+        plot_access(df, p, 'cache_misses', ymax=1.8e8)
 
 
 if __name__ == '__main__':
-
     pd.set_option('display.float_format', lambda x: '%.5f' % x)
 
     parser = argparse.ArgumentParser(description='Generate plots from YCSB and numastat csvs')
