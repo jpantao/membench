@@ -25,22 +25,20 @@ def paramiko_connect(node, user):
 
 
 def paramiko_exec(ssh, cmd):
-    print(f"Executing command: {cmd}")
+    print(f'Executing command: {cmd}')
     stdin, stdout, stderr = ssh.exec_command(cmd)
     return stdout.readlines()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Deploy membench test')
-    parser.add_argument('--n-runs', '-n', dest='n_runs', default=3, help='Number of runs (default=3)')
+    parser.add_argument('--n-runs', '-n', dest='n_runs', default=1, help='Number of runs (default=1)')
     parser.add_argument('test_name', action='store', help='Name of the test')
     args = parser.parse_args()
-
-    out = f'logs/{args.test_name}.log'
 
     # kadeploy
     subprocess.run(["scripts/deploy.sh"])
 
     hostname = get_reservation_node()
     host = paramiko_connect(hostname, os.getenv('USER'))
-    paramiko_exec(host, f'cd {os.getcwd()} scripts/membench-test.sh {args.n_runs} {out}')
+    paramiko_exec(host, f'cd {os.getcwd()} && ./scripts/membench-test.py {args.test_name} -n {args.n_runs}')

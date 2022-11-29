@@ -16,11 +16,6 @@
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 unsigned long spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
 
-void print_usage(char *exec_name) {
-    printf("Usage: %s [OPTION]....\n", exec_name);
-    printf("Try 'grep -h' for more information.\n");
-}
-
 void print_help(char *exec_name) {
     printf("Usage: %s [OPTION]...\n", exec_name);
     printf("Benchmark different kinds of memory accesses.\n");
@@ -40,6 +35,11 @@ void print_help(char *exec_name) {
     printf("\n");
     printf("Miscellaneous:\n");
     printf("  -h\t\tprint this message\n");
+}
+
+void print_usage(char *exec_name) {
+    printf("Usage: %s [OPTION]....\n", exec_name);
+    printf("Try 'grep -h' for more information.\n");
 }
 
 static __inline__ uint64_t access_memory(const uint64_t *address) {
@@ -116,33 +116,38 @@ void memset_random(uint64_t *data, unsigned long size) {
 }
 
 int main(int argc, char *argv[]) {
+
+    // Parse command line arguments
     argparse(argc, argv);
 
+    // Runtime variable declarations and initialization
     struct timeval tstart, tend;
     unsigned int seed = 0;
 
-    // Initialize data
-    long data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH;
-    int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // 8 positions = 64 bytes
-    unsigned long data_len = data_size / DATA_UNIT_SIZE;
-
-    uint64_t *data = malloc(data_size);
-    memset_random(data, data_len);
-
-    int iterations = N_OPERATIONS;
-
-    int *pregen_array;
-    pregen_array = malloc(iterations * sizeof(int));
-    for (int i = 0; i < iterations; i++)
-        pregen_array[i] = gen_address_CL64(&seed, data_len);
-
     struct timeval spinloop_tstart, spinloop_tend;
-    unsigned long spinloop_duration = 0;
+    register unsigned long spinloop_duration = 0;
 
-    unsigned long offset = 0;
+    register unsigned long offset = 0;
+
+    long data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH; // In bytes
+    unsigned long data_len = data_size / DATA_UNIT_SIZE; // Number of positions in the data array
+    int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // Number of data array positions per cache line
+
+    // Data initialization
+    uint64_t *data = malloc(data_size);
+    for (register int i = 0; i < data_len; i++) {
+        data[i] = gen_address_CL64(&seed, data_len);
+    }
+
+    // Pregen array initialization
+    int *pregen_array = malloc(N_OPERATIONS * sizeof(int));
+    for (register int i = 0; i < N_OPERATIONS; i++) {
+        pregen_array[i] = gen_address_CL64(&seed, data_len);
+    }
+
+    // Main loop
     gettimeofday(&tstart, NULL);
-
-    for (int i = 0; i < N_OPERATIONS; i++) {
+    for (register int i = 0; i < N_OPERATIONS; i++) {
 
         if (op_seq)
             offset = (offset + cache_line_size) % data_len;
@@ -152,7 +157,7 @@ int main(int argc, char *argv[]) {
             offset = pregen_array[i];
 
         if (op_prefetch)
-            __builtin_prefetch(data + offset, 0, 0);
+            __builtin_prefetch(data + offset);
 
         gettimeofday(&spinloop_tstart, NULL);
         spinloop(spinloop_iterations);
@@ -161,14 +166,14 @@ int main(int argc, char *argv[]) {
 
         access_memory(data + offset);
     }
-
     gettimeofday(&tend, NULL);
 
+    // Output
     unsigned long duration = time_diff(&tstart, &tend) - (spinloop_duration);
-    unsigned long tp = iterations / (duration / 1000);
+    unsigned long tp = N_OPERATIONS / (duration / 1000);
 
-    if (op_csv) printf("%ld\n", tp);
-    else printf("throughput: %ld op/ms\n", tp);
+    if (op_csv) printf("%f\n", tp);
+    else printf("throughput: %f op/ms\n", tp);
 
     return 0;
 }

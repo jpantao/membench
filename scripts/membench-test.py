@@ -1,6 +1,14 @@
 #!/bin/python3
 
 import argparse
+import csv
+import os
+import shlex
+import subprocess
+
+DRAM = (0, 0)
+PMEM = (3, 1)
+
 PERF_EVENTS = [
     "cache-misses",
     "L1-dcache-load-misses",
@@ -23,10 +31,114 @@ PERF_EVENTS = [
     "instructions"
 ]
 
+
+def is_event(string):
+    for event in PERF_EVENTS:
+        if event in string:
+            return True
+    return False
+
+
+def is_counted(line):
+    return '<not counted>' not in line
+
+
+def extract_perf_results(perf_out):
+    lines = perf_out.strip().split('\n')[2:]
+    lines = filter(is_event, lines)
+    lines = filter(is_counted, lines)
+    table = [cols.strip().split() for cols in lines]
+    return [val[0].strip().replace(',', '') for val in table]
+
+
+def extract_sec_time_elapsed(perf_out):
+    for line in perf_out.strip().split('\n'):
+        if 'seconds time elapsed' in line:
+            return line.split()[0]
+    return
+
+
+def extract_membench_results(p):
+    out_dict = dict(zip(PERF_EVENTS, extract_perf_results(p.stderr.decode('utf-8'))))
+    out_dict['throughput'] = p.stdout.decode('utf-8').strip()
+    out_dict['seconds-time-elapsed'] = extract_sec_time_elapsed(p.stderr.decode('utf-8'))
+    return out_dict
+
+
+def run_membench(ex, flags, numa_node, cpu_node, iterations):
+    print(f"Running {ex} with flags {flags} on numa node {numa_node} and cpu node {cpu_node}, {iterations} it")
+    event_str = ','.join(PERF_EVENTS)
+    cmd = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{ex} -c -w {iterations} {flags} "
+    p = subprocess.run(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out_dict = extract_membench_results(p)
+    return out_dict
+
+
+def benchmark_node(node_kind, iterations):
+    # print(f"Running benchmark on {node_kind} node")
+    node = DRAM if node_kind == 'dram' else PMEM
+
+    rows = list()
+    rows.append({'node_kind': node_kind, 'access_pattern': 'seq', 'spinloop_iterations': iterations,
+                 **run_membench('membench', '-s', node[0], node[1], w)})
+    rows.append({'node_kind': node_kind, 'access_pattern': 'pgn', 'spinloop_iterations': iterations,
+                 **run_membench('membench', '-g', node[0], node[1], w)})
+    rows.append({'node_kind': node_kind, 'access_pattern': 'rnd', 'spinloop_iterations': iterations,
+                 **run_membench('membench', '-r', node[0], node[1], w)})
+    rows.append({'node_kind': node_kind, 'access_pattern': 'seq_prefetch', 'spinloop_iterations': iterations,
+                 **run_membench('membench', '-s -p', node[0], node[1], w)})
+    rows.append({'node_kind': node_kind, 'access_pattern': 'pgn_prefetch', 'spinloop_iterations': iterations,
+                 **run_membench('membench', '-g -p', node[0], node[1], w)})
+    rows.append({'node_kind': node_kind, 'access_pattern': 'rnd_prefetch', 'spinloop_iterations': iterations,
+                 **run_membench('membench', '-r -p', node[0], node[1], w)})
+    return rows
+
+
+def benchmark_node_baseline(node_kind, ex):
+    node = DRAM if node_kind == 'dram' else PMEM
+    return {'node_kind': node_kind, 'exec': ex, **run_membench(ex, '', node[0], node[1], 0)}
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run membench test')
-    parser.add_argument('--n-runs', '-n', dest='n_runs', default=3, help='Number of runs (default=3)')
     parser.add_argument('test_name', action='store', help='Name of the test')
+    parser.add_argument('--n-runs', '-n', dest='n_runs', default=1, help='Number of runs (default=1)')
+    parser.add_argument('--dram-only', '-d', dest='dram_only', action='store_true', default=False,
+                        help='Only benchmark DRAM')
+
     args = parser.parse_args()
+    runs = range(1, int(args.n_runs) + 1)
+    spinloop_iterations = range(0, 501, 50)
 
+    subprocess.run(shlex.split('make clean'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(shlex.split('make'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    os.makedirs('logs', exist_ok=True)
+    f = open(f'logs/{args.test_name}.csv', 'w')
 
+    fieldnames = ['exec', 'run', 'node_kind', 'access_pattern', 'spinloop_iterations', 'throughput',
+                  'seconds_time_elapsed', *PERF_EVENTS]
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for r in runs:
+        print(f'--- Run {r} ---')
+
+        print('-> Baseline tests ')
+        writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_base')})
+        writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_data_init')})
+        writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_pregen_init')})
+
+        if not args.dram_only:
+            writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_base')})
+            writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_data_init')})
+            writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_pregen_init')})
+
+        print(f'-> Membench tests')
+        for w in spinloop_iterations:
+            for row in benchmark_node('dram', w):
+                writer.writerow({'exec': 'membench', 'run': r, **row})
+            if not args.dram_only:
+                for row in benchmark_node('pmem', w):
+                    writer.writerow({'exec': 'membench', 'run': r, **row})
+
+        print('--- Finished ---')
