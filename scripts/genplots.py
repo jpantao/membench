@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 METRICS = [
     "throughput",
-    "seconds_time_elapsed",
+    "seconds-time-elapsed",
     "cache-misses",
     "L1-dcache-load-misses",
     "L1-dcache-loads",
@@ -48,7 +48,8 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
     ymax = means.max().max() * 1.5 if ymax is None else ymax
     # print(means.max())
     # print(means.max().max())
-    means.plot(style='.-', logy=logy, ylim=([0, ymax]))
+    # means.plot(style='.-', logy=logy, ylim=([0, ymax]))
+    means.plot(style='.-', logy=logy)
     # plt.ticklabel_format(style='plain', axis='y')
     plt.title(f'{metric} for {access_pattern} access pattern')
     plt.savefig(f'{out_dir}/spinloop_{access_pattern}_{metric}.jpeg')
@@ -63,6 +64,7 @@ def gen_spinloop_plots(data):
         for p in patterns:
             if m == 'throughput':
                 plot_access(data, p, m, ymax=40000)
+                exit()
             else:
                 plot_access(data, p, m)
 

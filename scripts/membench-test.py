@@ -6,6 +6,7 @@ import os
 import shlex
 import subprocess
 
+# numa node, cpu node
 DRAM = (0, 0)
 PMEM = (3, 1)
 
@@ -44,7 +45,7 @@ def is_counted(line):
 
 
 def extract_perf_results(perf_out):
-    lines = perf_out.strip().split('\n')[2:]
+    lines = perf_out.decode('utf-8').strip().split('\n')[2:]
     lines = filter(is_event, lines)
     lines = filter(is_counted, lines)
     table = [cols.strip().split() for cols in lines]
@@ -52,17 +53,10 @@ def extract_perf_results(perf_out):
 
 
 def extract_sec_time_elapsed(perf_out):
-    for line in perf_out.strip().split('\n'):
+    for line in perf_out.decode('utf-8').strip().split('\n'):
         if 'seconds time elapsed' in line:
             return line.split()[0]
     return
-
-
-def extract_membench_results(p):
-    out_dict = dict(zip(PERF_EVENTS, extract_perf_results(p.stderr.decode('utf-8'))))
-    out_dict['throughput'] = p.stdout.decode('utf-8').strip()
-    out_dict['seconds-time-elapsed'] = extract_sec_time_elapsed(p.stderr.decode('utf-8'))
-    return out_dict
 
 
 def run_membench(ex, flags, numa_node, cpu_node, iterations):
@@ -70,7 +64,12 @@ def run_membench(ex, flags, numa_node, cpu_node, iterations):
     event_str = ','.join(PERF_EVENTS)
     cmd = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{ex} -c -w {iterations} {flags} "
     p = subprocess.run(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out_dict = extract_membench_results(p)
+
+    out_dict = {
+        'throughput': p.stdout.decode('utf-8').strip(),
+        'seconds-time-elapsed': extract_sec_time_elapsed(p.stderr),
+        **dict(zip(PERF_EVENTS, extract_perf_results(p.stderr)))
+    }
     return out_dict
 
 
@@ -108,7 +107,12 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     runs = range(1, int(args.n_runs) + 1)
-    spinloop_iterations = range(0, 501, 50)
+
+    it_1 = range(0, 500, 100)
+    it_2 = range(500, 1001, 50)
+    spinloop_iterations = list(it_1) + list(it_2)
+
+    print(f'{spinloop_iterations}')
 
     subprocess.run(shlex.split('make clean'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     subprocess.run(shlex.split('make'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -116,7 +120,7 @@ if __name__ == '__main__':
     f = open(f'logs/{args.test_name}.csv', 'w')
 
     fieldnames = ['exec', 'run', 'node_kind', 'access_pattern', 'spinloop_iterations', 'throughput',
-                  'seconds_time_elapsed', *PERF_EVENTS]
+                  'seconds-time-elapsed', *PERF_EVENTS]
     writer = csv.DictWriter(f, fieldnames=fieldnames)
     writer.writeheader()
 
