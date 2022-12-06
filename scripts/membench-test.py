@@ -62,8 +62,8 @@ def extract_sec_time_elapsed(perf_out):
 def run_membench(ex, flags, numa_node, cpu_node, iterations):
     print(f"Running {ex} with flags {flags} on numa node {numa_node} and cpu node {cpu_node}, {iterations} it")
     event_str = ','.join(PERF_EVENTS)
-    cmd = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{ex} -c -w {iterations} {flags} "
-    p = subprocess.run(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    c = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{ex} -c -w {iterations} {flags}"
+    p = subprocess.run(shlex.split(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     out_dict = {
         'throughput': p.stdout.decode('utf-8').strip(),
@@ -108,9 +108,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     runs = range(1, int(args.n_runs) + 1)
 
-    it_1 = range(0, 500, 100)
-    it_2 = range(500, 1001, 50)
-    spinloop_iterations = list(it_1) + list(it_2)
+    range_1 = range(0, 1000, 200)
+    range_2 = range(1000, 5001, 200)
+    spinloop_iterations = list(range_1) + list(range_2)
 
     print(f'{spinloop_iterations}')
 

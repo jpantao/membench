@@ -44,12 +44,17 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
     means = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='mean')
     errors = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='std')
 
-    print(means)
-    ymax = means.max().max() * 1.5 if ymax is None else ymax
+    # print(means)
+    # ymax = means.max().max() * 1.5 if ymax is None else ymax
     # print(means.max())
     # print(means.max().max())
     # means.plot(style='.-', logy=logy, ylim=([0, ymax]))
-    means.plot(style='.-', logy=logy)
+
+    if ymax is None:
+        means.plot(style='.-', logy=logy)
+    else:
+        means.plot(style='.-', logy=logy, ylim=([0, ymax]))
+
     # plt.ticklabel_format(style='plain', axis='y')
     plt.title(f'{metric} for {access_pattern} access pattern')
     plt.savefig(f'{out_dir}/spinloop_{access_pattern}_{metric}.jpeg')
@@ -63,8 +68,7 @@ def gen_spinloop_plots(data):
         print(m)
         for p in patterns:
             if m == 'throughput':
-                plot_access(data, p, m, ymax=40000)
-                exit()
+                plot_access(data, p, m, ymax=50000)
             else:
                 plot_access(data, p, m)
 

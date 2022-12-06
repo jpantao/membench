@@ -54,6 +54,15 @@ static __inline__ unsigned long time_diff(struct timeval *start, struct timeval 
     return 1000000 * sec_res + usec_res;
 }
 
+/**
+ * Generate random addresses (i.e., array positions). The function takes a seed and the length of the array as
+ * arguments. The seed is used to initialize the random number generator, and the length of the array is used to
+ * generate random numbers between 0 and the length of the array. Furthermore, the function ensures that the
+ * generated addresses are aligned to cache lines, i.e., that the addresses are multiples of 8.
+ * @param seed
+ * @param access_max
+ * @return
+ */
 static __inline__ int gen_address_CL64(unsigned int *seed, int access_max) {
     return ((rand_r(seed) >> 3) << 3) % access_max;
 }
@@ -157,7 +166,7 @@ int main(int argc, char *argv[]) {
             offset = pregen_array[i];
 
         if (op_prefetch)
-            __builtin_prefetch(data + offset);
+            __builtin_prefetch(data + offset, 0, 0);
 
         gettimeofday(&spinloop_tstart, NULL);
         spinloop(spinloop_iterations);
@@ -170,7 +179,7 @@ int main(int argc, char *argv[]) {
 
     // Output
     unsigned long duration = time_diff(&tstart, &tend) - (spinloop_duration);
-    unsigned long tp = N_OPERATIONS / (duration / 1000);
+    float tp = N_OPERATIONS / (duration / 1000);
 
     if (op_csv) printf("%f\n", tp);
     else printf("throughput: %f op/ms\n", tp);
