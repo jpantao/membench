@@ -11,7 +11,7 @@
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
 #define CACHE_LINE_SIZE     64 // In bytes
 
-#define N_OPERATIONS        100000000
+#define N_OPERATIONS        100000000 // 100 million
 
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 unsigned long spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
@@ -149,9 +149,9 @@ int main(int argc, char *argv[]) {
     }
 
     // Pregen array initialization
-    int *pregen_array = malloc(N_OPERATIONS * sizeof(int));
+    int *pgn_addr = malloc(N_OPERATIONS * sizeof(int));
     for (register int i = 0; i < N_OPERATIONS; i++) {
-        pregen_array[i] = gen_address_CL64(&seed, data_len);
+        pgn_addr[i] = gen_address_CL64(&seed, data_len);
     }
 
     // Main loop
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
         else if (op_rand)
             offset = gen_address_CL64(&seed, data_len);
         else if (op_pregen)
-            offset = pregen_array[i];
+            offset = pgn_addr[i];
 
         if (op_prefetch)
             __builtin_prefetch(data + offset, 0, 0);

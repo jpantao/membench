@@ -108,8 +108,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     runs = range(1, int(args.n_runs) + 1)
 
-    range_1 = range(0, 1000, 200)
-    range_2 = range(1000, 5001, 200)
+    range_1 = range(0, 3000, 100)
+    range_2 = range(3000, 4000, 200)
     spinloop_iterations = list(range_1) + list(range_2)
 
     print(f'{spinloop_iterations}')
