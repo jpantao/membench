@@ -30,6 +30,30 @@ METRICS = [
     "instructions"
 ]
 
+YMAX = {
+    "throughput": 50000,
+    "seconds-time-elapsed": 200,
+    "cache-misses": 2e8,
+    "L1-dcache-load-misses": 2e8,
+    "L1-dcache-loads": 9e9,
+    "LLC-load-misses": 2e8,
+    "LLC-loads": None,
+    "LLC-store-misses": None,
+    "LLC-stores": None,
+    "l1d_pend_miss.pending": 1.75e11,
+    "l1d_pend_miss.pending_cycles": None,
+    "l1d.replacement": None,
+    "l1d_pend_miss.fb_full": None,
+    "sw_prefetch_access.nta": 1.2e8,
+    "sw_prefetch_access.prefetchw": None,
+    "sw_prefetch_access.t0": None,
+    "sw_prefetch_access.t1_t2": None,
+    "branch-misses": None,
+    "branches": None,
+    "cpu-cycles": None,
+    "instructions": None,
+}
+
 
 def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=None):
     if node_type is None:
@@ -67,10 +91,7 @@ def gen_spinloop_plots(data):
     for m in METRICS:
         print(m)
         for p in patterns:
-            if m == 'throughput':
-                plot_access(data, p, m, ymax=50000)
-            else:
-                plot_access(data, p, m)
+            plot_access(data, p, m, ymax=YMAX[m])
 
 
 def gen_baseline_plots(data):
