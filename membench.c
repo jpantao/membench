@@ -178,8 +178,8 @@ int main(int argc, char *argv[]) {
     gettimeofday(&tend, NULL);
 
     // Output
-    unsigned long duration = time_diff(&tstart, &tend) - (spinloop_duration);
-    float tp = N_OPERATIONS / (duration / 1000);
+    unsigned long duration = time_diff(&tstart, &tend) - (spinloop_duration); // mainloop_duration - spinloop_duration
+    float tp = N_OPERATIONS / (duration / 1000); // In accesses per millisecond
 
     if (op_csv) printf("%f\n", tp);
     else printf("throughput: %f op/ms\n", tp);

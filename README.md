@@ -69,7 +69,20 @@ for (register int i = 0; i < N_OPERATIONS; i++) {
 gettimeofday(&tend, NULL);
 ```
 
-In
+Before each access, the `offset` variable is updated with the address to be accessed. The `offset` variable is used to 
+index the `data` array and is updated according to the access pattern selected by the user.
+
+If the `-p` option is used, the `__builtin_prefetch` function is used to prefetch the data to be accessed
+to processor cache. Additionally, and to ensure that the effects of prefetch take place, a spinloop is executed right
+after the prefetch. The spinloop is executed `spinloop_iterations` times (which is configurable through a command line 
+argument). 
+
+We calculate the time spent in the main loop and the spinloop separately. In the end, the output of the benchmark is 
+the throughput (op/ms) measured as `N_OPERATIONS / mainloop_duration - spinloop_duration`.
+
+## Evaluation
+
+TODO
 
 ### Usage
 
