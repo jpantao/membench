@@ -29,7 +29,10 @@ PERF_EVENTS = [
     "branch-misses",
     "branches",
     "cpu-cycles",
-    "instructions"
+    "instructions",
+    # "mem_load_retired.l3_miss",
+    # "mem_load_l3_miss_retired.local_dram",
+    # "mem_load_retired.local_pmm"
 ]
 
 
@@ -64,7 +67,8 @@ def run_membench(ex, flags, numa_node, cpu_node, iterations):
     event_str = ','.join(PERF_EVENTS)
     c = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{ex} -c -w {iterations} {flags}"
     p = subprocess.run(shlex.split(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
+    # print(p.stdout.decode())
+    # print(p.stderr.decode())
     out_dict = {
         'throughput': p.stdout.decode('utf-8').strip(),
         'seconds-time-elapsed': extract_sec_time_elapsed(p.stderr),
@@ -109,7 +113,7 @@ if __name__ == '__main__':
     runs = range(1, int(args.n_runs) + 1)
 
     range_1 = range(0, 3000, 100)
-    range_2 = range(3000, 4000, 200)
+    range_2 = range(3000, 4001, 200)
     spinloop_iterations = list(range_1) + list(range_2)
 
     print(f'{spinloop_iterations}')
@@ -145,4 +149,4 @@ if __name__ == '__main__':
                 for row in benchmark_node('pmem', w):
                     writer.writerow({'exec': 'membench', 'run': r, **row})
 
-        print('--- Finished ---')
+    print('--- Finished ---')

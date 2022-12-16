@@ -5,6 +5,7 @@ import os
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.container import ErrorbarContainer
 
 METRICS = [
     "throughput",
@@ -27,7 +28,10 @@ METRICS = [
     "branch-misses",
     "branches",
     "cpu-cycles",
-    "instructions"
+    "instructions",
+    # "mem_load_retired.l3_miss",
+    # "mem_load_l3_miss_retired.local_dram",
+    # "mem_load_retired.local_pmm"
 ]
 
 YMAX = {
@@ -41,17 +45,47 @@ YMAX = {
     "LLC-store-misses": None,
     "LLC-stores": None,
     "l1d_pend_miss.pending": 1.75e11,
-    "l1d_pend_miss.pending_cycles": None,
+    "l1d_pend_miss.pending_cycles": 1.75e11,
     "l1d.replacement": None,
     "l1d_pend_miss.fb_full": None,
     "sw_prefetch_access.nta": 1.2e8,
     "sw_prefetch_access.prefetchw": None,
     "sw_prefetch_access.t0": None,
     "sw_prefetch_access.t1_t2": None,
-    "branch-misses": None,
-    "branches": None,
+    "branch-misses": 2e9,
+    "branches": 2e9,
     "cpu-cycles": None,
     "instructions": None,
+    # "mem_load_retired.l3_miss": None,
+    # "mem_load_l3_miss_retired.local_dram": None,
+    # "mem_load_retired.local_pmm": None
+}
+
+ROTATION = {
+    "throughput": 90,
+    "seconds-time-elapsed": 90,
+    "cache-misses": 90,
+    "L1-dcache-load-misses": 90,
+    "L1-dcache-loads": 90,
+    "LLC-load-misses": 90,
+    "LLC-loads": 90,
+    "LLC-store-misses": 90,
+    "LLC-stores": 90,
+    "l1d_pend_miss.pending": 90,
+    "l1d_pend_miss.pending_cycles": 90,
+    "l1d.replacement": 90,
+    "l1d_pend_miss.fb_full": 90,
+    "sw_prefetch_access.nta": 90,
+    "sw_prefetch_access.prefetchw": 90,
+    "sw_prefetch_access.t0": 90,
+    "sw_prefetch_access.t1_t2": 90,
+    "branch-misses": 90,
+    "branches": 90,
+    "cpu-cycles": 90,
+    "instructions": 90,
+    # "mem_load_retired.l3_miss": 90,
+    # "mem_load_l3_miss_retired.local_dram": 90,
+    # "mem_load_retired.local_pmm": 90
 }
 
 
@@ -68,11 +102,11 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
     means = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='mean')
     errors = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='std')
 
-    # print(means)
-    # ymax = means.max().max() * 1.5 if ymax is None else ymax
-    # print(means.max())
-    # print(means.max().max())
-    # means.plot(style='.-', logy=logy, ylim=([0, ymax]))
+    if metric == 'l1d_pend_miss.pending_cycles' and access_pattern == 'rnd':
+        print(f'--- min\n {means.min()}')
+        print(f'--- max\n {means.max()}')
+
+    # print(f'pattern: {access_pattern}, min: {means.min().min()} max: {means.max().max()}')
 
     if ymax is None:
         means.plot(style='.-', logy=logy)
@@ -105,9 +139,18 @@ def gen_baseline_plots(data):
         if m == 'throughput':
             continue
         print(m)
+
         means = baselines.pivot_table(m, 'exec', ['node_kind'], aggfunc='mean')
         errors = baselines.pivot_table(m, 'exec', ['node_kind'], aggfunc='std')
-        means.plot.bar(rot=0, yerr=errors)
+        if YMAX[m] is None:
+            ax = means.plot.bar(rot=0, yerr=errors)
+        else:
+            ax = means.plot.bar(rot=0, yerr=errors, ylim=([None, YMAX[m]]))
+        plt.legend(loc='upper left')
+        for container in ax.containers:
+            if isinstance(container, ErrorbarContainer):
+                continue
+            ax.bar_label(container, labels=[f'{x:,.0f}' for x in container.datavalues], rotation=ROTATION[m], padding=3)
         plt.title(f'Baseline for {m}')
         plt.savefig(f'{out_dir}/baseline_{m}.jpeg')
 

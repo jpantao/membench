@@ -8,7 +8,7 @@
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH (1024*1024*1024) // In bytes (1GB)
 #define DEFAULT_SPINLOOP_ITERATIONS 0
 
-#define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes
+#define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes = 8
 #define CACHE_LINE_SIZE     64 // In bytes
 
 #define N_OPERATIONS        100000000 // 100 million
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     register unsigned long offset = 0;
 
     long data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH; // In bytes
-    unsigned long data_len = data_size / DATA_UNIT_SIZE; // Number of positions in the data array
+    unsigned long data_len = data_size / DATA_UNIT_SIZE; // Number of positions in the data array = 134,217,728
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // Number of data array positions per cache line
 
     // Data initialization
