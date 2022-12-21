@@ -15,4 +15,4 @@ cp ./*.c $remote_dir
 cp CMakeLists.txt $remote_dir
 
 
-rsync -aPv -e "ssh -p 22" $remote_dir "$remote_host":.
+rsync -aPv -e "ssh -p 12034" $remote_dir "$remote_host":.
