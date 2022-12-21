@@ -118,10 +118,22 @@ void argparse(int argc, char *argv[]) {
 
 }
 
-void memset_random(uint64_t *data, unsigned long size) {
-    for (int i = 0; i < size; i++) {
-        data[i] = rand();
+int count_repetitions(int *array, int array_size) {
+    int count = 0;
+    unsigned long long progress = 0;
+    unsigned long long progress_total = (unsigned long long)array_size * (unsigned long long)array_size;
+    printf("array_size=%d\n", array_size);
+    printf("progress_total=%llu\n", progress_total);
+//    exit(0);
+    for (int i = 0; i < array_size; i++) {
+        for (int j = i + 1; j < array_size; j++) {
+            printf("progress: %llu/%llu - count=%d\n", progress++, progress_total, count);
+            if (array[i] == array[j]) {
+                count++;
+            }
+        }
     }
+    return count;
 }
 
 int main(int argc, char *argv[]) {
@@ -153,6 +165,9 @@ int main(int argc, char *argv[]) {
     for (register int i = 0; i < N_OPERATIONS; i++) {
         pgn_addr[i] = gen_address_CL64(&seed, data_len);
     }
+
+    printf("repeat_count=%d\n", count_repetitions(pgn_addr, N_OPERATIONS));
+    exit(0);
 
     // Main loop
     gettimeofday(&tstart, NULL);
