@@ -118,12 +118,6 @@ void argparse(int argc, char *argv[]) {
 
 }
 
-void memset_random(uint64_t *data, unsigned long size) {
-    for (int i = 0; i < size; i++) {
-        data[i] = rand();
-    }
-}
-
 int main(int argc, char *argv[]) {
 
     // Parse command line arguments
