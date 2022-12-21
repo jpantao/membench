@@ -6,16 +6,12 @@
 remote_host=$1
 remote_dir="membench-g5k"
 
-make clean 
 
 rm -rf $remote_dir
 mkdir -p $remote_dir
+
 cp -r ./scripts $remote_dir
-cp membench.c $remote_dir
-cp membench_base.c $remote_dir
-cp membench_data_init.c $remote_dir
-cp membench_pregen_init.c $remote_dir
-cp simplebench.c $remote_dir
+cp ./*.c $remote_dir
 cp CMakeLists.txt $remote_dir
 
 

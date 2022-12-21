@@ -14,7 +14,7 @@
 #define N_OPERATIONS        100000000
 
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
-unsigned long spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
+int spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
 
 void print_help(char *exec_name) {
     printf("Usage: %s [OPTION]...\n", exec_name);
@@ -42,7 +42,7 @@ void print_usage(char *exec_name) {
     printf("Try 'grep -h' for more information.\n");
 }
 
-static __inline__ uint64_t access_memory(const uint64_t *address) {
+static __inline__ uint64_t access_memory(register uint64_t *address) {
     register uint64_t fake = 0;
     fake += *address;
     return fake;
@@ -54,11 +54,11 @@ static __inline__ unsigned long time_diff(struct timeval *start, struct timeval 
     return 1000000 * sec_res + usec_res;
 }
 
-static __inline__ int gen_address_CL64(unsigned int *seed, int access_max) {
+static __inline__ int gen_address_CL64(register unsigned int *seed, register int access_max) {
     return ((rand_r(seed) >> 3) << 3) % access_max;
 }
 
-static __inline__ void spinloop(register unsigned long iterations) {
+static __inline__ void spinloop(register int iterations) {
     while (iterations--) {
         __asm__ __volatile__("");
     }
@@ -100,19 +100,13 @@ void argparse(int argc, char *argv[]) {
                 exit(0);
         }
 
-        if (op_seq && op_rand || op_seq && op_pregen || op_rand && op_pregen) {
+        if ((op_seq && op_rand) || (op_seq && op_pregen) || (op_rand && op_pregen)) {
             printf("Only one access type can be specified.\n");
             print_usage(argv[0]);
             exit(0);
         }
     }
 
-}
-
-void memset_random(uint64_t *data, unsigned long size) {
-    for (int i = 0; i < size; i++) {
-        data[i] = rand();
-    }
 }
 
 int main(int argc, char *argv[]) {
@@ -125,12 +119,11 @@ int main(int argc, char *argv[]) {
     unsigned int seed = 0;
 
     struct timeval spinloop_tstart, spinloop_tend;
-    register unsigned long spinloop_duration = 0;
+    register int spinloop_duration = 0;
+    register int offset = 0;
 
-    register unsigned long offset = 0;
-
-    long data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH; // In bytes
-    unsigned long data_len = data_size / DATA_UNIT_SIZE; // Number of positions in the data array
+    int data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH; // In bytes
+    int data_len = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH / DATA_UNIT_SIZE; // Number of positions in the data array
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // Number of data array positions per cache line
 
     // Data initialization

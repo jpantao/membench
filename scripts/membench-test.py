@@ -29,10 +29,7 @@ PERF_EVENTS = [
     "branch-misses",
     "branches",
     "cpu-cycles",
-    "instructions",
-    # "mem_load_retired.l3_miss",
-    # "mem_load_l3_miss_retired.local_dram",
-    # "mem_load_retired.local_pmm"
+    "instructions"
 ]
 
 
@@ -45,6 +42,10 @@ def is_event(string):
 
 def is_counted(line):
     return '<not counted>' not in line
+
+
+def extract_throughput(stdout):
+    return stdout.decode('utf-8').strip()
 
 
 def extract_perf_results(perf_out):
@@ -65,12 +66,13 @@ def extract_sec_time_elapsed(perf_out):
 def run_membench(ex, flags, numa_node, cpu_node, iterations):
     print(f"Running {ex} with flags {flags} on numa node {numa_node} and cpu node {cpu_node}, {iterations} it")
     event_str = ','.join(PERF_EVENTS)
-    c = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{ex} -c -w {iterations} {flags}"
+    c = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{args.build_dir}/{ex} " \
+        f"-c -w {iterations} {flags}"
     p = subprocess.run(shlex.split(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # print(p.stdout.decode())
     # print(p.stderr.decode())
     out_dict = {
-        'throughput': p.stdout.decode('utf-8').strip(),
+        'throughput': extract_throughput(p.stdout),
         'seconds-time-elapsed': extract_sec_time_elapsed(p.stderr),
         **dict(zip(PERF_EVENTS, extract_perf_results(p.stderr)))
     }
@@ -106,20 +108,29 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run membench test')
     parser.add_argument('test_name', action='store', help='Name of the test')
     parser.add_argument('--n-runs', '-n', dest='n_runs', default=1, help='Number of runs (default=1)')
+    parser.add_argument('--build-dir', '-b', dest='build_dir', default='build',
+                        help='CMake build directory (default=build)')
     parser.add_argument('--dram-only', '-d', dest='dram_only', action='store_true', default=False,
                         help='Only benchmark DRAM')
 
     args = parser.parse_args()
+
+    if not args.dram_only:
+        PERF_EVENTS = PERF_EVENTS + [
+            "mem_load_retired.l3_miss",
+            "mem_load_l3_miss_retired.local_dram",
+            "mem_load_retired.local_pmm"
+        ]
+
     runs = range(1, int(args.n_runs) + 1)
 
     range_1 = range(0, 3000, 100)
     range_2 = range(3000, 4001, 200)
     spinloop_iterations = list(range_1) + list(range_2)
 
-    print(f'{spinloop_iterations}')
-
-    subprocess.run(shlex.split('make clean'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    subprocess.run(shlex.split('make'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    # subprocess.run(shlex.split('cmake -S . -B build'))
+    # subprocess.run(shlex.split('make clean --directory build'))
+    # subprocess.run(shlex.split('make --directory build'))
     os.makedirs('logs', exist_ok=True)
     f = open(f'logs/{args.test_name}.csv', 'w')
 
@@ -128,6 +139,7 @@ if __name__ == '__main__':
     writer = csv.DictWriter(f, fieldnames=fieldnames)
     writer.writeheader()
 
+    # print(f'Iteration range: {spinloop_iterations}')
     for r in runs:
         print(f'--- Run {r} ---')
 
@@ -141,6 +153,8 @@ if __name__ == '__main__':
             writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_data_init')})
             writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_pregen_init')})
 
+        f.flush()
+
         print(f'-> Membench tests')
         for w in spinloop_iterations:
             for row in benchmark_node('dram', w):
@@ -148,5 +162,8 @@ if __name__ == '__main__':
             if not args.dram_only:
                 for row in benchmark_node('pmem', w):
                     writer.writerow({'exec': 'membench', 'run': r, **row})
+            f.flush()
+
+    f.close()
 
     print('--- Finished ---')

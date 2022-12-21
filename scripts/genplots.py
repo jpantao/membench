@@ -102,9 +102,9 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
     means = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='mean')
     errors = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='std')
 
-    if metric == 'l1d_pend_miss.pending_cycles' and access_pattern == 'rnd':
-        print(f'--- min\n {means.min()}')
-        print(f'--- max\n {means.max()}')
+    # if metric == 'l1d_pend_miss.pending_cycles' and access_pattern == 'rnd':
+    #     print(f'--- min\n {means.min()}')
+    #     print(f'--- max\n {means.max()}')
 
     # print(f'pattern: {access_pattern}, min: {means.min().min()} max: {means.max().max()}')
 
@@ -113,7 +113,7 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
     else:
         means.plot(style='.-', logy=logy, ylim=([0, ymax]))
 
-    # plt.ticklabel_format(style='plain', axis='y')
+    plt.ticklabel_format(style='plain', axis='y')
     plt.title(f'{metric} for {access_pattern} access pattern')
     plt.savefig(f'{out_dir}/spinloop_{access_pattern}_{metric}.jpeg')
 
