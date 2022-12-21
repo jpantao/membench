@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
     unsigned int seed = 0;
 
     struct timeval spinloop_tstart, spinloop_tend;
-    register int spinloop_duration = 0;
+    register unsigned long spinloop_duration = 0;
     register int offset = 0;
 
     int data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH; // In bytes
