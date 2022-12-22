@@ -118,18 +118,52 @@ void argparse(int argc, char *argv[]) {
 
 }
 
-int count_repetitions(int *array, int array_size) {
-    int count = 0;
-    unsigned long long progress = 0;
-    unsigned long long progress_total = (unsigned long long)array_size * (unsigned long long)array_size;
-    printf("array_size=%d\n", array_size);
-    printf("progress_total=%llu\n", progress_total);
-//    exit(0);
+unsigned long count_val_repetitions(const int *array,  int array_size,  int val) {
+    register unsigned long count = 0;
     for (int i = 0; i < array_size; i++) {
+        if (array[i] == val) {
+            count++;
+        }
+    }
+    return count;
+}
+
+bool is_in_array(const int *array, int array_size, int val) {
+    for (int i = 0; i < array_size; i++) {
+        if (array[i] == val)
+            return true;
+    }
+    return false;
+}
+
+
+unsigned long count_repetitions(const int *array, int array_size) {
+    printf("Counting repetitions...\n");
+    unsigned long count = 0;
+    int* repeated = (int*) calloc(array_size, sizeof(int));
+    int repeated_size = 0;
+    for (int i = 0; i < array_size; i++) {
+        printf("progress: %d/%d - count=%lu\n", i, array_size, count);
+        if(is_in_array(repeated, repeated_size, array[i]))
+            continue;
+        unsigned long val_count = count_val_repetitions(array, array_size, array[i]);
+        if(val_count > 1) {
+            count += val_count-1;
+            repeated[repeated_size++] = array[i];
+        }
+    }
+    return count;
+}
+
+unsigned long count_repeated(const int *array, int array_size) {
+    printf("Counting repeated...\n");
+    unsigned long count = 0;
+    for (int i = 0; i < array_size; i++) {
+        printf("progress: %d/%d - count=%lu", i, array_size, count);
         for (int j = i + 1; j < array_size; j++) {
-            printf("progress: %llu/%llu - count=%d\n", progress++, progress_total, count);
             if (array[i] == array[j]) {
                 count++;
+                break;
             }
         }
     }
@@ -166,7 +200,8 @@ int main(int argc, char *argv[]) {
         pgn_addr[i] = gen_address_CL64(&seed, data_len);
     }
 
-    printf("repeat_count=%d\n", count_repetitions(pgn_addr, N_OPERATIONS));
+    printf("repetitions_count=%lu\n", count_repetitions(pgn_addr, N_OPERATIONS));
+    printf("repeated_count=%lu\n", count_repeated(pgn_addr, N_OPERATIONS));
     exit(0);
 
     // Main loop
