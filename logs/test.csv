@@ -1,4 +1,0 @@
-exec,run,node_kind,access_pattern,spinloop_iterations,throughput,seconds-time-elapsed,cache-misses,L1-dcache-load-misses,L1-dcache-loads,LLC-load-misses,LLC-loads,LLC-store-misses,LLC-stores,l1d_pend_miss.pending,l1d_pend_miss.pending_cycles,l1d.replacement,l1d_pend_miss.fb_full,sw_prefetch_access.nta,sw_prefetch_access.prefetchw,sw_prefetch_access.t0,sw_prefetch_access.t1_t2,branch-misses,branches,cpu-cycles,instructions
-membench_base,1,dram,,,,0.001788258,6506,2415,29454,318,,,,,,,,,,,,,,,
-membench_data_init,1,dram,,,,3.883415482,21553349,16791874,1196895753,19130,38568,538693,1661070,3539096,3189344,16775196,370096,0,0,0,0,14507,801808680,3909240064,6534269327
-membench_pregen_init,1,dram,,,,5.204851746,23413046,20908708,2026222251,23260,46724,717543,2351106,5282931,4898610,20976170,301996,0,0,0,0,20078,1400738466,6232720020,11379074891
