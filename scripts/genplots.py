@@ -9,38 +9,38 @@ from matplotlib.container import ErrorbarContainer
 
 METRICS = [
     "throughput",
-    "seconds-time-elapsed",
+    # "seconds-time-elapsed",
     "cache-misses",
     "L1-dcache-load-misses",
-    "L1-dcache-loads",
+    # "L1-dcache-loads",
     "LLC-load-misses",
-    "LLC-loads",
+    # "LLC-loads",
     "LLC-store-misses",
-    "LLC-stores",
-    "l1d_pend_miss.pending",
+    # "LLC-stores",
+    # "l1d_pend_miss.pending",
     "l1d_pend_miss.pending_cycles",
-    "l1d.replacement",
-    "l1d_pend_miss.fb_full",
-    "sw_prefetch_access.nta",
-    "sw_prefetch_access.prefetchw",
-    "sw_prefetch_access.t0",
-    "sw_prefetch_access.t1_t2",
-    "branch-misses",
-    "branches",
-    "cpu-cycles",
-    "instructions",
+    # "l1d.replacement",
+    # "l1d_pend_miss.fb_full",
+    # "sw_prefetch_access.nta",
+    # "sw_prefetch_access.prefetchw",
+    # "sw_prefetch_access.t0",
+    # "sw_prefetch_access.t1_t2",
+    # "branch-misses",
+    # "branches",
+    # "cpu-cycles",
+    # "instructions",
     # "mem_load_retired.l3_miss",
     # "mem_load_l3_miss_retired.local_dram",
     # "mem_load_retired.local_pmm"
 ]
 
 YMAX = {
-    "throughput": 50000,
+    "throughput": 70000,
     "seconds-time-elapsed": 200,
-    "cache-misses": 2e8,
-    "L1-dcache-load-misses": 2e8,
+    "cache-misses": 4e8,
+    "L1-dcache-load-misses": 4e8,
     "L1-dcache-loads": 9e9,
-    "LLC-load-misses": 2e8,
+    "LLC-load-misses": 4e8,
     "LLC-loads": None,
     "LLC-store-misses": None,
     "LLC-stores": None,
@@ -113,7 +113,7 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
     else:
         means.plot(style='.-', logy=logy, ylim=([0, ymax]))
 
-    plt.ticklabel_format(style='plain', axis='y')
+    # plt.ticklabel_format(style='plain', axis='y')
     plt.title(f'{metric} for {access_pattern} access pattern')
     plt.savefig(f'{out_dir}/spinloop_{access_pattern}_{metric}.jpeg')
 
@@ -157,7 +157,7 @@ def gen_baseline_plots(data):
 
 if __name__ == '__main__':
     plt.rcParams.update({'figure.max_open_warning': 0})
-    pd.set_option('display.float_format', lambda x: '%.5f' % x)
+    # pd.set_option('display.float_format', lambda x: '%.5f' % x)
 
     parser = argparse.ArgumentParser(description='Generate from membench results')
     parser.add_argument('input', action='store', help='CSV input file/dir')
