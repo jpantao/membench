@@ -167,7 +167,8 @@ int main(int argc, char *argv[]) {
         gettimeofday(&spinloop_tend, NULL);
         spinloop_duration += time_diff(&spinloop_tstart, &spinloop_tend);
 
-        access_memory(data + offset);
+        // Access memory: now load + store
+        data[offset] = access_memory(data + offset);
     }
     gettimeofday(&tend, NULL);
 

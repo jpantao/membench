@@ -128,9 +128,11 @@ if __name__ == '__main__':
     range_2 = range(3000, 4001, 200)
     spinloop_iterations = list(range_1) + list(range_2)
 
-    # subprocess.run(shlex.split('cmake -S . -B build'))
-    # subprocess.run(shlex.split('make clean --directory build'))
-    # subprocess.run(shlex.split('make --directory build'))
+    # clean and build
+    subprocess.run(shlex.split('cmake -S . -B build'))
+    subprocess.run(shlex.split('make clean --directory build'))
+    subprocess.run(shlex.split('make --directory build'))
+
     os.makedirs('logs', exist_ok=True)
     f = open(f'logs/{args.test_name}.csv', 'w')
 
