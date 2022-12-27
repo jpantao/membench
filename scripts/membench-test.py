@@ -124,8 +124,8 @@ if __name__ == '__main__':
 
     runs = range(1, int(args.n_runs) + 1)
 
-    range_1 = range(0, 3000, 100)
-    range_2 = range(3000, 4001, 200)
+    range_1 = range(0, 4000, 200)
+    range_2 = range(4000, 5001, 500)
     spinloop_iterations = list(range_1) + list(range_2)
 
     # clean and build
