@@ -42,7 +42,7 @@ YMAX = {
     "L1-dcache-loads": 9e9,
     "LLC-load-misses": 4e8,
     "LLC-loads": None,
-    "LLC-store-misses": None,
+    "LLC-store-misses": 4e8,
     "LLC-stores": None,
     "l1d_pend_miss.pending": 1.75e11,
     "l1d_pend_miss.pending_cycles": 1.75e11,

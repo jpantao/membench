@@ -3,7 +3,7 @@ project (membench C)
 
 set(CMAKE_C_STANDARD 99)
 #set(CMAKE_EXE_LINKER_FLAGS "-static")
-add_compile_options(-Wall -Wextra -Wpedantic -O1)
+add_compile_options(-Wall -Wextra -Wpedantic -fprefetch-loop-arrays)
 
 add_executable(membench membench.c)
 add_executable(membench_base membench_base.c)
