@@ -10,6 +10,57 @@ import subprocess
 DRAM = (0, 0)
 PMEM = (3, 1)
 
+# COMPILER_FLAGS = ['-O0', '-O1', '-O2', '-O3', '-Ofast']
+COMPILER_FLAGS = [
+    '-fauto-inc-dec',
+    '-fbranch-count-reg',
+    '-fcombine-stack-adjustments',
+    '-fcompare-elim',
+    '-fcprop-registers',
+    '-fdce',
+    '-fdefer-pop',
+    '-fdelayed-branch',
+    '-fdse',
+    '-fforward-propagate',
+    '-fguess-branch-probability',
+    '-fif-conversion',
+    '-fif-conversion2',
+    '-finline-functions-called-once',
+    '-fipa-modref',
+    '-fipa-profile',
+    '-fipa-pure-const',
+    '-fipa-reference',
+    '-fipa-reference-addressable',
+    '-fmerge-constants',
+    '-fmove-loop-invariants',
+    '-fmove-loop-stores',
+    '-fomit-frame-pointer',
+    '-freorder-blocks',
+    '-fshrink-wrap',
+    '-fshrink-wrap-separate',
+    '-fsplit-wide-types',
+    '-fssa-backprop',
+    '-fssa-phiopt',
+    '-ftree-bit-ccp',
+    '-ftree-ccp',
+    '-ftree-ch',
+    '-ftree-coalesce-vars',
+    '-ftree-copy-prop',
+    '-ftree-dce',
+    '-ftree-dominator-opts',
+    '-ftree-dse',
+    '-ftree-forwprop',
+    '-ftree-fre',
+    '-ftree-phiprop',
+    '-ftree-pta',
+    '-ftree-scev-cprop',
+    '-ftree-sink',
+    '-ftree-slsr',
+    '-ftree-sra',
+    '-ftree-ter',
+    '-funit-at-a-time',
+]
+
 PERF_EVENTS = [
     "cache-misses",
     "L1-dcache-load-misses",
@@ -124,48 +175,52 @@ if __name__ == '__main__':
 
     runs = range(1, int(args.n_runs) + 1)
 
-    range_1 = range(0, 4000, 200)
+    range_1 = range(0, 4000, 500)
     range_2 = range(4000, 5001, 500)
     spinloop_iterations = list(range_1) + list(range_2)
 
-    # clean and build
-    subprocess.run(shlex.split('cmake -S . -B build'))
-    subprocess.run(shlex.split('make clean --directory build'))
-    subprocess.run(shlex.split('make --directory build'))
-
     os.makedirs('logs', exist_ok=True)
-    f = open(f'logs/{args.test_name}.csv', 'w')
 
-    fieldnames = ['exec', 'run', 'node_kind', 'access_pattern', 'spinloop_iterations', 'throughput',
-                  'seconds-time-elapsed', *PERF_EVENTS]
-    writer = csv.DictWriter(f, fieldnames=fieldnames)
-    writer.writeheader()
+    for flag in COMPILER_FLAGS:
+        print(f"Running baseline with flag {flag}")
+        f = open(f'logs/{args.test_name}{flag}.csv', 'w')
 
-    # print(f'Iteration range: {spinloop_iterations}')
-    for r in runs:
-        print(f'--- Run {r} ---')
+        fieldnames = ['exec', 'run', 'node_kind', 'access_pattern', 'spinloop_iterations', 'throughput',
+                      'seconds-time-elapsed', *PERF_EVENTS]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
 
-        print('-> Baseline tests ')
-        writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_base')})
-        writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_data_init')})
-        writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_pregen_init')})
+        # clean and build
+        subprocess.run(shlex.split('make clean --directory build'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(shlex.split(f'cmake -B build -DCMAKE_C_FLAGS="{flag}"'))
+        subprocess.run(shlex.split('make --directory build'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        if not args.dram_only:
-            writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_base')})
-            writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_data_init')})
-            writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_pregen_init')})
+        # print(f'Iteration range: {spinloop_iterations}')
+        for r in runs:
+            print(f'--- Run {r} ---')
 
-        f.flush()
+            # print('-> Baseline tests ')
+            # writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_base')})
+            # writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_data_init')})
+            # writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_pregen_init')})
+            #
+            # if not args.dram_only:
+            #     writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_base')})
+            #     writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_data_init')})
+            #     writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_pregen_init')})
+            #
+            # f.flush()
 
-        print(f'-> Membench tests')
-        for w in spinloop_iterations:
-            for row in benchmark_node('dram', w):
-                writer.writerow({'exec': 'membench', 'run': r, **row})
-            if not args.dram_only:
-                for row in benchmark_node('pmem', w):
+            print(f'-> Membench tests')
+            for w in spinloop_iterations:
+                for row in benchmark_node('dram', w):
                     writer.writerow({'exec': 'membench', 'run': r, **row})
-            f.flush()
+                if not args.dram_only:
+                    for row in benchmark_node('pmem', w):
+                        writer.writerow({'exec': 'membench', 'run': r, **row})
+                f.flush()
 
-    f.close()
+        f.close()
+        print(f"Done with flag {flag}")
 
     print('--- Finished ---')

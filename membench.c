@@ -11,7 +11,7 @@
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes = 8
 #define CACHE_LINE_SIZE     64 // In bytes
 
-#define N_OPERATIONS        100000000 // 100 million
+#define N_OPERATIONS        1000000 // 1 million
 
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 int spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;

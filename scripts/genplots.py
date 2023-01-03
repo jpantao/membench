@@ -171,6 +171,6 @@ if __name__ == '__main__':
     df = df.drop(columns=['run'], axis=0)
 
     print(f'Generating plots for {test_name}')
+    # gen_baseline_plots(df)
     gen_spinloop_plots(df)
-    gen_baseline_plots(df)
     print(f'Plots saved in logs')
