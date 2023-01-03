@@ -5,6 +5,9 @@
 #include <sys/time.h>
 #include <stdbool.h>
 
+#include <search.h>
+#include <math.h>
+
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH (1024*1024*1024) // In bytes (1GB)
 #define DEFAULT_SPINLOOP_ITERATIONS 0
 
@@ -118,125 +121,72 @@ void argparse(int argc, char *argv[]) {
 
 }
 
-unsigned long count_val_repetitions(const int *array, int array_size, int val) {
-    register unsigned long count = 0;
+
+void hcreate_count_repetitions(const int *array, int array_size) {
+    printf("val,count\n");
+
+    hcreate(10 * array_size);
+    ENTRY item, *found_item;
+
     for (int i = 0; i < array_size; i++) {
-        if (array[i] == val) {
-            count++;
+        char str[10];
+        sprintf(str, "%d", array[i]);
+        item.key = str;
+        found_item = hsearch(item, FIND);
+        if (found_item == NULL) {
+            item.data = (void *) 1UL;
+            hsearch(item, ENTER);
+        } else {
+            size_t val = (size_t) found_item->data + 1;
+            found_item->data = (void *) val;
         }
     }
-    return count;
-}
 
-bool is_in_array(const int *array, int array_size, int val) {
     for (int i = 0; i < array_size; i++) {
-        if (array[i] == val)
-            return true;
-    }
-    return false;
-}
-
-
-unsigned long count_repetitions(const int *array, int array_size) {
-    printf("Counting repetitions...\n");
-    unsigned long count = 0;
-    int *repeated = (int *) calloc(array_size, sizeof(int));
-    int repeated_size = 0;
-    for (int i = 0; i < array_size; i++) {
-        if (i % 1000000 == 0)
-            printf("progress: %d/%d - count=%lu", i, array_size, count);
-
-        if (is_in_array(repeated, repeated_size, array[i]))
-            continue;
-        unsigned long val_count = count_val_repetitions(array, array_size, array[i]);
-        if (val_count > 1) {
-            count += val_count - 1;
-            repeated[repeated_size++] = array[i];
+        char str[10];
+        sprintf(str, "%d", array[i]);
+        item.key = str;
+        found_item = hsearch(item, FIND);
+        if (found_item != NULL) {
+            size_t val = (size_t) found_item->data;
+            printf("%s,%lu\n", item.key, val);
         }
     }
-    return count;
+
+    hdestroy();
 }
 
-unsigned long count_repeated(const int *array, int array_size) {
-    printf("Counting repeated...\n");
-    unsigned long count = 0;
+void print_array(const int *array, int array_size) {
+    printf("val,count\n");
     for (int i = 0; i < array_size; i++) {
-        if (i % 1000000 == 0)
-            printf("progress: %d/%d - count=%lu", i, array_size, count);
-
-        for (int j = i + 1; j < array_size; j++) {
-            if (array[i] == array[j]) {
-                count++;
-                break;
-            }
-        }
+        printf("%d,1\n", array[i]);
     }
-    return count;
 }
+
 
 int main(int argc, char *argv[]) {
 
     // Parse command line arguments
     argparse(argc, argv);
 
-    // Runtime variable declarations and initialization
     struct timeval tstart, tend;
     unsigned int seed = 0;
 
-    struct timeval spinloop_tstart, spinloop_tend;
-    register int spinloop_duration = 0;
-    register int offset = 0;
-
-    int data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH; // In bytes
     int data_len =
             DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH / DATA_UNIT_SIZE; // Number of positions in the data array = 134,217,728
-    int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // Number of data array positions per cache line
-
-    // Data initialization
-    uint64_t *data = malloc(data_size);
-    for (register int i = 0; i < data_len; i++) {
-        data[i] = gen_address_CL64(&seed, data_len);
-    }
 
     // Pregen array initialization
     int *pgn_addr = malloc(N_OPERATIONS * sizeof(int));
+    gettimeofday(&tstart, NULL);
     for (register int i = 0; i < N_OPERATIONS; i++) {
         pgn_addr[i] = gen_address_CL64(&seed, data_len);
     }
-
-    printf("repetitions_count=%lu\n", count_repetitions(pgn_addr, N_OPERATIONS));
-//    printf("repeated_count=%lu\n", count_repeated(pgn_addr, N_OPERATIONS));
-    exit(0);
-
-    // Main loop
-    gettimeofday(&tstart, NULL);
-    for (register int i = 0; i < N_OPERATIONS; i++) {
-
-        if (op_seq)
-            offset = (offset + cache_line_size) % data_len;
-        else if (op_rand)
-            offset = gen_address_CL64(&seed, data_len);
-        else if (op_pregen)
-            offset = pgn_addr[i];
-
-        if (op_prefetch)
-            __builtin_prefetch(data + offset, 0, 0);
-
-        gettimeofday(&spinloop_tstart, NULL);
-        spinloop(spinloop_iterations);
-        gettimeofday(&spinloop_tend, NULL);
-        spinloop_duration += time_diff(&spinloop_tstart, &spinloop_tend);
-
-        access_memory(data + offset);
-    }
     gettimeofday(&tend, NULL);
+    unsigned long duration = time_diff(&tstart, &tend);
+    print_array(pgn_addr, N_OPERATIONS);
+    printf( "Duration: %lu\n", duration);
+//    hcreate_count_repetitions(pgn_addr, N_OPERATIONS);
 
-    // Output
-    unsigned long duration = time_diff(&tstart, &tend) - (spinloop_duration); // mainloop_duration - spinloop_duration
-    float tp = (float) N_OPERATIONS / (((float) duration) / 1000); // In accesses per millisecond
-
-    if (op_csv) printf("%f\n", tp);
-    else printf("throughput: %f op/ms\n", tp);
 
     return 0;
 }
