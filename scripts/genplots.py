@@ -123,7 +123,7 @@ def gen_spinloop_plots(data):
     patterns = ['seq', 'rnd', 'pgn']
 
     for m in METRICS:
-        print(m)
+        # print(m)
         for p in patterns:
             plot_access(data, p, m, ymax=YMAX[m])
 
@@ -138,7 +138,7 @@ def gen_baseline_plots(data):
     for m in METRICS:
         if m == 'throughput':
             continue
-        print(m)
+        # print(m)
 
         means = baselines.pivot_table(m, 'exec', ['node_kind'], aggfunc='mean')
         errors = baselines.pivot_table(m, 'exec', ['node_kind'], aggfunc='std')

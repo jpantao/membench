@@ -10,56 +10,64 @@ import subprocess
 DRAM = (0, 0)
 PMEM = (3, 1)
 
-# COMPILER_FLAGS = ['-O0', '-O1', '-O2', '-O3', '-Ofast']
 COMPILER_FLAGS = [
-    '-fauto-inc-dec',
-    '-fbranch-count-reg',
-    '-fcombine-stack-adjustments',
-    '-fcompare-elim',
-    '-fcprop-registers',
-    '-fdce',
-    '-fdefer-pop',
-    '-fdelayed-branch',
-    '-fdse',
-    '-fforward-propagate',
-    '-fguess-branch-probability',
-    '-fif-conversion',
-    '-fif-conversion2',
-    '-finline-functions-called-once',
+    '-O0',
+    '-O1',
+    '-O2',
+    '-O3',
+    '-Ofast',
     '-fipa-modref',
-    '-fipa-profile',
-    '-fipa-pure-const',
-    '-fipa-reference',
-    '-fipa-reference-addressable',
-    '-fmerge-constants',
-    '-fmove-loop-invariants',
-    '-fmove-loop-stores',
-    '-fomit-frame-pointer',
-    '-freorder-blocks',
-    '-fshrink-wrap',
-    '-fshrink-wrap-separate',
-    '-fsplit-wide-types',
-    '-fssa-backprop',
-    '-fssa-phiopt',
-    '-ftree-bit-ccp',
-    '-ftree-ccp',
-    '-ftree-ch',
-    '-ftree-coalesce-vars',
-    '-ftree-copy-prop',
-    '-ftree-dce',
-    '-ftree-dominator-opts',
-    '-ftree-dse',
-    '-ftree-forwprop',
-    '-ftree-fre',
-    '-ftree-phiprop',
-    '-ftree-pta',
-    '-ftree-scev-cprop',
-    '-ftree-sink',
-    '-ftree-slsr',
-    '-ftree-sra',
-    '-ftree-ter',
-    '-funit-at-a-time',
+    '-fmove-loop-stores'
 ]
+# COMPILER_FLAGS = [
+#     '-fauto-inc-dec',
+#     '-fbranch-count-reg',
+#     '-fcombine-stack-adjustments',
+#     '-fcompare-elim',
+#     '-fcprop-registers',
+#     '-fdce',
+#     '-fdefer-pop',
+#     '-fdelayed-branch',
+#     '-fdse',
+#     '-fforward-propagate',
+#     '-fguess-branch-probability',
+#     '-fif-conversion',
+#     '-fif-conversion2',
+#     '-finline-functions-called-once',
+#     '-fipa-modref',
+#     '-fipa-profile',
+#     '-fipa-pure-const',
+#     '-fipa-reference',
+#     '-fipa-reference-addressable',
+#     '-fmerge-constants',
+#     '-fmove-loop-invariants',
+#     '-fmove-loop-stores',
+#     '-fomit-frame-pointer',
+#     '-freorder-blocks',
+#     '-fshrink-wrap',
+#     '-fshrink-wrap-separate',
+#     '-fsplit-wide-types',
+#     '-fssa-backprop',
+#     '-fssa-phiopt',
+#     '-ftree-bit-ccp',
+#     '-ftree-ccp',
+#     '-ftree-ch',
+#     '-ftree-coalesce-vars',
+#     '-ftree-copy-prop',
+#     '-ftree-dce',
+#     '-ftree-dominator-opts',
+#     '-ftree-dse',
+#     '-ftree-forwprop',
+#     '-ftree-fre',
+#     '-ftree-phiprop',
+#     '-ftree-pta',
+#     '-ftree-scev-cprop',
+#     '-ftree-sink',
+#     '-ftree-slsr',
+#     '-ftree-sra',
+#     '-ftree-ter',
+#     '-funit-at-a-time',
+# ]
 
 PERF_EVENTS = [
     "cache-misses",
@@ -182,7 +190,7 @@ if __name__ == '__main__':
     os.makedirs('logs', exist_ok=True)
 
     for flag in COMPILER_FLAGS:
-        print(f"Running baseline with flag {flag}")
+        print(f"--- Running baseline with flag {flag} ---")
         f = open(f'logs/{args.test_name}{flag}.csv', 'w')
 
         fieldnames = ['exec', 'run', 'node_kind', 'access_pattern', 'spinloop_iterations', 'throughput',
@@ -193,7 +201,7 @@ if __name__ == '__main__':
         # clean and build
         subprocess.run(shlex.split('make clean --directory build'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         subprocess.run(shlex.split(f'cmake -B build -DCMAKE_C_FLAGS="{flag}"'))
-        subprocess.run(shlex.split('make --directory build'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(shlex.split('make --directory build'))
 
         # print(f'Iteration range: {spinloop_iterations}')
         for r in runs:
@@ -221,6 +229,6 @@ if __name__ == '__main__':
                 f.flush()
 
         f.close()
-        print(f"Done with flag {flag}")
+        print(f"----Done with flag {flag} ---------------")
 
     print('--- Finished ---')
