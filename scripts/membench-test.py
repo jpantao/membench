@@ -12,12 +12,7 @@ PMEM = (3, 1)
 
 COMPILER_FLAGS = [
     '-O0',
-    '-O1',
-    '-O2',
-    '-O3',
-    '-Ofast',
-    '-fipa-modref',
-    '-fmove-loop-stores'
+    '-O1'
 ]
 # COMPILER_FLAGS = [
 #     '-fauto-inc-dec',
