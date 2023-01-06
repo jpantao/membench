@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
     gettimeofday(&tend, NULL);
     unsigned long duration = time_diff(&tstart, &tend);
     print_array(pgn_addr, N_OPERATIONS);
-    printf( "Duration: %lu\n", duration);
+//    printf( "Duration: %lu\n", duration);
 
     //    hcreate_count_repetitions(pgn_addr, N_OPERATIONS);
 
