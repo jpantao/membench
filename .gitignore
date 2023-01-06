@@ -18,7 +18,3 @@ cmake-build-debug
 
 membench-g5k/
 perf.data
-
-cm
-
-tp
