@@ -8,4 +8,3 @@ add_executable(membench_randr membench_randr.c)
 add_executable(membench_lehmer membench_lehmer.c)
 add_executable(membench_wyhash membench_wyhash.c)
 
-#add_executable(simplebench simplebench.c)
