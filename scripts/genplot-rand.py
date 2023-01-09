@@ -30,19 +30,23 @@ def gen_plots():
         df = pd.read_csv(f'logs/{exe}.csv', dtype={'val': 'str', 'count': int})
         df = df.groupby(['val']).sum()
         print(f'Number unique values: {len(df)}')
-        bins = df['count'].unique()
-        df.hist(column=['count'], grid=True, bins=24)
-        plt.title(f'{exe} - Random generation distribution')
+        bins = range(0, 25, 1)
+        df.hist(column=['count'], grid=True, bins=bins, rwidth=0.9, color='#607c8e')
+        plt.title(f'{exe.split("_")[1]} - Random generation distribution')
         plt.xticks(bins)
         plt.savefig(f'figs/{exe}.png')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate from rand results')
+    parser.add_argument('--only-plots', '-p', dest='only_plots', action='store_true', default=False, help='only plots')
     args = parser.parse_args()
 
-    print('--- Generating logs ---')
-    gen_logs()
+    if not args.only_plots:
+        print('--- Generating logs ---')
+        gen_logs()
+
     print('--- Generating plots ---')
     gen_plots()
+
     print('--- Done ---')
