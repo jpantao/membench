@@ -43,7 +43,7 @@ void print_usage(char *exec_name) {
 }
 
 static __inline__ uint64_t access_memory(register uint64_t *address) {
-    register uint64_t fake = 33333;
+    register uint64_t fake = 333333;
     fake += *address;
     return fake;
 }

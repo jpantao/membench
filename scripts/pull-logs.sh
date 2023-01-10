@@ -3,7 +3,7 @@
 # usage:
 # ./scripts/pull-logs.sh <dir-name> <remote-host>
 
-dir_name=$1
-remote_host=$2
+remote_host=$1
+remote_dir="membench-g5k"
 
-rsync -aPv -e "ssh -p 22" ${remote_host}:${dir_name}/logs .
+rsync -aPv -e "ssh -p 22" "${remote_host}":${remote_dir}/logs .
