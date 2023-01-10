@@ -11,7 +11,7 @@
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes = 8
 #define CACHE_LINE_SIZE     64 // In bytes
 
-#define N_OPERATIONS        100000000 // 100 million
+#define N_OPERATIONS        100000000 // Number of operations to perform = 100M
 
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 int spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
@@ -43,7 +43,7 @@ void print_usage(char *exec_name) {
 }
 
 static __inline__ uint64_t access_memory(register uint64_t *address) {
-    register uint64_t fake = 0;
+    register uint64_t fake = 333333;
     fake += *address;
     return fake;
 }
