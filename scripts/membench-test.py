@@ -12,57 +12,11 @@ PMEM = (3, 1)
 
 COMPILER_FLAGS = [
     '-O0',
-    '-O1'
+    '-O1',
+    '-O2',
+    '-O3',
 ]
-# COMPILER_FLAGS = [
-#     '-fauto-inc-dec',
-#     '-fbranch-count-reg',
-#     '-fcombine-stack-adjustments',
-#     '-fcompare-elim',
-#     '-fcprop-registers',
-#     '-fdce',
-#     '-fdefer-pop',
-#     '-fdelayed-branch',
-#     '-fdse',
-#     '-fforward-propagate',
-#     '-fguess-branch-probability',
-#     '-fif-conversion',
-#     '-fif-conversion2',
-#     '-finline-functions-called-once',
-#     '-fipa-modref',
-#     '-fipa-profile',
-#     '-fipa-pure-const',
-#     '-fipa-reference',
-#     '-fipa-reference-addressable',
-#     '-fmerge-constants',
-#     '-fmove-loop-invariants',
-#     '-fmove-loop-stores',
-#     '-fomit-frame-pointer',
-#     '-freorder-blocks',
-#     '-fshrink-wrap',
-#     '-fshrink-wrap-separate',
-#     '-fsplit-wide-types',
-#     '-fssa-backprop',
-#     '-fssa-phiopt',
-#     '-ftree-bit-ccp',
-#     '-ftree-ccp',
-#     '-ftree-ch',
-#     '-ftree-coalesce-vars',
-#     '-ftree-copy-prop',
-#     '-ftree-dce',
-#     '-ftree-dominator-opts',
-#     '-ftree-dse',
-#     '-ftree-forwprop',
-#     '-ftree-fre',
-#     '-ftree-phiprop',
-#     '-ftree-pta',
-#     '-ftree-scev-cprop',
-#     '-ftree-sink',
-#     '-ftree-slsr',
-#     '-ftree-sra',
-#     '-ftree-ter',
-#     '-funit-at-a-time',
-# ]
+
 
 PERF_EVENTS = [
     "cache-misses",
@@ -202,17 +156,17 @@ if __name__ == '__main__':
         for r in runs:
             print(f'--- Run {r} ---')
 
-            # print('-> Baseline tests ')
-            # writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_base')})
-            # writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_data_init')})
-            # writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_pregen_init')})
-            #
-            # if not args.dram_only:
-            #     writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_base')})
-            #     writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_data_init')})
-            #     writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_pregen_init')})
-            #
-            # f.flush()
+            print('-> Baseline tests ')
+            writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_base')})
+            writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_data_init')})
+            writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_pregen_init')})
+
+            if not args.dram_only:
+                writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_base')})
+                writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_data_init')})
+                writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_pregen_init')})
+
+            f.flush()
 
             print(f'-> Membench tests')
             for w in spinloop_iterations:
