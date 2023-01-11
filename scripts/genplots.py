@@ -173,4 +173,4 @@ if __name__ == '__main__':
     print(f'Generating plots for {test_name}')
     # gen_baseline_plots(df)
     gen_spinloop_plots(df)
-    print(f'Plots saved in logs')
+    print(f'Plots saved in figs')
