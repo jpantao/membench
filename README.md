@@ -90,7 +90,16 @@ the throughput (op/ms) measured as `N_OPERATIONS / mainloop_duration - spinloop_
 
 TODO
 
-### Usage
+## Usage
+
+To compile the benchmark, run:
+
+```
+cmake -B build
+make --directory build
+```
+
+The benchmark can be run with:
 
 ```
 Usage: ./membench [OPTION]...
@@ -100,35 +109,31 @@ Access types:
   -s            sequential memory access
   -r            random memory access (generate a random address at 'access time')
   -g            random memory access (accesss random pre-generated addresses)
+  
+Note: only one access type can be selected at a time. If none is selected, the default is sequential access. 
 
 Processor cache prefetch options:
   -p            prefetch data to processor cache before each access (default=do not use prefetch)
-  -w iterations number of iterations for the spinloop after each prefetch (default=0)
+  -w <it>       number of iterations for the spinloop after each prefetch (default=0)
 
 Output control:
-  -c            output in csv format (throughput,cache_misses)
+  -c            output in csv format (throughput)
 ```
+
+#### Example
+
+This benchmark is used to measure the impact of prefetching on the throughput of random memory accesses. In combination
+with `numactl` and `perf`, we can isolate the benchmark to a specific CPU and NUMA node and measure other hardware 
+events such as cache misses. 
+
+To extract the number of cache misses in the last level cache (LLC) and the throughput of the benchmark in memory node 0
+and CPU node 0 , we run:
+
+``` 
+numactl --membind=0 --cpubind=0 perf stat -e cache-misses ./build/membench -c -w {iterations} {flags}
+```
+
+The list of available `perf` events can be found [here](https://perf.wiki.kernel.org/index.php/Tutorial#Available_events).
 
 ---
 
-[//]: # (### Running on Grid 5000)
-
-[//]: # ()
-
-[//]: # (Pushing the code to the site:)
-
-[//]: # (```)
-
-[//]: # (./scripts/push-code.sh grenoble.g5k)
-
-[//]: # (```)
-
-[//]: # ()
-
-[//]: # (Passive reservation:)
-
-[//]: # (```)
-
-[//]: # (oarsub -t exotic -p "cluster='troll'" -t deploy -l nodes=1,walltime=1 "./scripts/deploy-test.sh <test_name> <n_runs>")
-
-[//]: # (```)
