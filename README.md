@@ -126,10 +126,12 @@ with `numactl` and `perf`, we can isolate the benchmark to a specific CPU and NU
 events such as cache misses. 
 
 To extract the number of cache misses in the last level cache (LLC) and the throughput of the benchmark in memory node 0
-and CPU node 0 , we run:
+and CPU node 0 with prefetching enabled in sequential mode and 1000 spinloop iterations, run:
+
+```
 
 ``` 
-numactl --membind=0 --cpubind=0 perf stat -e cache-misses ./build/membench -c -w {iterations} {flags}
+numactl --membind=0 --cpubind=0 perf stat -e cache-misses ./build/membench -c -w 1000 -p
 ```
 
 The list of available `perf` events can be found [here](https://perf.wiki.kernel.org/index.php/Tutorial#Available_events).
