@@ -132,3 +132,7 @@ Output control:
 [//]: # (oarsub -t exotic -p "cluster='troll'" -t deploy -l nodes=1,walltime=1 "./scripts/deploy-test.sh <test_name> <n_runs>")
 
 [//]: # (```)
+
+## Acknowledgments
+
+This work was partially funded by the Portuguese FCT-MEC project HiPSTr (High-performance Software Transactions — PTDC/CCI-COM/32456/2017)&LISBOA-01-0145-FEDER-032456).
