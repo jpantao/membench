@@ -54,23 +54,22 @@ This consists in the main loop with the memory accesses. The loop is repeated `N
 // Main loop
 gettimeofday(&tstart, NULL);
 for (register int i = 0; i < N_OPERATIONS; i++) {
-
-if (op_seq)
-offset = (offset + cache_line_size) % data_len;
-else if (op_rand)
-offset = gen_address_CL64(&seed, data_len);
-else if (op_pregen)
-offset = pgn_addr[i];
-
-if (op_prefetch)
-__builtin_prefetch(data + offset, 0, 0);
-
-gettimeofday(&spinloop_tstart, NULL);
-spinloop(spinloop_iterations);
-gettimeofday(&spinloop_tend, NULL);
-spinloop_duration += time_diff(&spinloop_tstart, &spinloop_tend);
-
-access_memory(data + offset);
+    if (op_seq)
+        offset = (offset + cache_line_size) % data_len;
+    else if (op_rand)
+        offset = gen_address_CL64(&seed, data_len);
+    else if (op_pregen)
+        offset = pgn_addr[i];
+    
+    if (op_prefetch)
+        __builtin_prefetch(data + offset, 0, 0);
+    
+    gettimeofday(&spinloop_tstart, NULL);
+    spinloop(spinloop_iterations);
+    gettimeofday(&spinloop_tend, NULL);
+    spinloop_duration += time_diff(&spinloop_tstart, &spinloop_tend);
+    
+    access_memory(data + offset);
 }
 gettimeofday(&tend, NULL);
 ```
