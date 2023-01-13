@@ -130,7 +130,7 @@ and CPU node 0 with prefetching enabled in sequential mode and 1000 spinloop ite
 
 
 ``` 
-numactl --membind=0 --cpubind=0 perf stat -e cache-misses ./build/membench -c -w 1000 -p
+numactl --membind=0 --cpubind=0 perf stat -e cache-misses ./build/membench -s -p -w 1000
 ```
 
 The list of available `perf` events can be found [here](https://perf.wiki.kernel.org/index.php/Tutorial#Available_events).
