@@ -137,3 +137,6 @@ The list of available `perf` events can be found [here](https://perf.wiki.kernel
 
 ---
 
+## Acknowledgments
+
+This work was partially funded by the Portuguese FCT-MEC project HiPSTr (High-performance Software Transactions — PTDC/CCI-COM/32456/2017)&LISBOA-01-0145-FEDER-032456).
