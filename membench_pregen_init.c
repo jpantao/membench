@@ -7,14 +7,14 @@
 
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH (1024*1024*1024) // In bytes (1GB)
 #define DEFAULT_SPINLOOP_ITERATIONS 0
+#define DEFAULT_N_OPERATIONS 10000000 // Number of operations to perform = 10M
 
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes = 8
 #define CACHE_LINE_SIZE     64 // In bytes
 
-#define N_OPERATIONS        100000000 // Number of operations to perform = 100M
-
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 int spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
+int n_operations = DEFAULT_N_OPERATIONS; // Number of operations to perform = 0
 
 void print_help(char *exec_name) {
     printf("Usage: %s [OPTION]...\n", exec_name);
@@ -109,11 +109,18 @@ void argparse(int argc, char *argv[]) {
                 exit(0);
         }
 
-        if ((op_seq && op_rand) || (op_seq && op_pregen) || (op_rand && op_pregen)) {
-            printf("Only one access type can be specified.\n");
-            print_usage(argv[0]);
-            exit(0);
-        }
+    }
+
+    // If no access type is specified, use sequential access by default
+    if (!op_seq && !op_rand && !op_pregen) {
+        op_seq = true;
+    }
+
+    // Check if the user has selected at least one access type
+    if ((op_seq && op_rand) || (op_seq && op_pregen) || (op_rand && op_pregen)) {
+        printf("Only one access type can be specified.\n");
+        print_usage(argv[0]);
+        exit(0);
     }
 
 }
@@ -143,8 +150,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Pregen array initialization
-    int *pgn_addr = malloc(N_OPERATIONS * sizeof(int));
-    for (register int i = 0; i < N_OPERATIONS; i++) {
+    int *pgn_addr = malloc(n_operations * sizeof(int));
+    for (register int i = 0; i < n_operations; i++) {
         pgn_addr[i] = gen_address_CL64(&seed, data_len);
     }
 

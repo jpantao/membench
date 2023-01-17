@@ -36,15 +36,15 @@ used to store the addresses to be used by the benchmark in the pre-generates ran
 
 ```c
 // Pregen array initialization
-int *pgn_addr = malloc(N_OPERATIONS * sizeof(int));
-for (register int i = 0; i < N_OPERATIONS; i++) {
+int *pgn_addr = malloc(n_operations * sizeof(int));
+for (register int i = 0; i < n_operations; i++) {
 pgn_addr[i] = gen_address_CL64(&seed, data_len);
 }
 ```
 
 Here, the `gen_address_CL64` function is used to generate random addresses ensuring that the generated addresses are
 aligned to cache lines, i.e., that the addresses are multiples of 8.
-`N_OPERATIONS` represents the number of accesses to be performed by the benchmark.
+`n_operations` represents the number of accesses to be performed by the benchmark.
 
 #### Phase 4
 
@@ -53,7 +53,7 @@ This consists in the main loop with the memory accesses. The loop is repeated `N
 ```c
 // Main loop
 gettimeofday(&tstart, NULL);
-for (register int i = 0; i < N_OPERATIONS; i++) {
+for (register int i = 0; i < n_operations; i++) {
     if (op_seq)
         offset = (offset + cache_line_size) % data_len;
     else if (op_rand)
@@ -83,7 +83,7 @@ after the prefetch. The spinloop is executed `spinloop_iterations` times (which 
 argument).
 
 We calculate the time spent in the main loop and the spinloop separately. In the end, the output of the benchmark is
-the throughput (op/ms) measured as `N_OPERATIONS / mainloop_duration - spinloop_duration`.
+the throughput (op/ms) measured as `n_operations / mainloop_duration - spinloop_duration`.
 
 ## Evaluation
 

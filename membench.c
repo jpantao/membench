@@ -7,15 +7,16 @@
 
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH (1024*1024*1024) // In bytes (1GB)
 #define DEFAULT_SPINLOOP_ITERATIONS 0
+#define DEFAULT_N_OPERATIONS 10000000 // Number of operations to perform = 10M
 
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes = 8
 #define CACHE_LINE_SIZE     64 // In bytes
 
-#define N_OPERATIONS        100000000 // Number of operations to perform = 100M
-
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 int spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
+int n_operations = DEFAULT_N_OPERATIONS; // Number of operations to perform = 0
 
+// TODO: update mesage to reflect the new options (-o)
 void print_help(char *exec_name) {
     printf("Usage: %s [OPTION]...\n", exec_name);
     printf("Benchmark different kinds of memory accesses.\n");
@@ -39,7 +40,7 @@ void print_help(char *exec_name) {
 
 void print_usage(char *exec_name) {
     printf("Usage: %s [OPTION]....\n", exec_name);
-    printf("Try 'grep -h' for more information.\n");
+    printf("Try 'membench -h' for more information.\n");
 }
 
 static __inline__ uint64_t access_memory(register uint64_t *address) {
@@ -100,6 +101,9 @@ void argparse(int argc, char *argv[]) {
             case 'w':
                 spinloop_iterations = atoi(argv[++i]);
                 break;
+            case 'o':
+                n_operations = atoi(argv[++i]);
+                break;
             case 'h':
                 print_help(argv[0]);
                 exit(0);
@@ -109,17 +113,18 @@ void argparse(int argc, char *argv[]) {
                 exit(0);
         }
 
-        // Check if the user has selected at least one access type
-        if ((op_seq && op_rand) || (op_seq && op_pregen) || (op_rand && op_pregen)) {
-            printf("Only one access type can be specified.\n");
-            print_usage(argv[0]);
-            exit(0);
-        }
+    }
 
-        // If no access type is specified, use sequential access by default
-        if (!op_seq && !op_rand && !op_pregen) {
-            op_seq = true;
-        }
+    // If no access type is specified, use sequential access by default
+    if (!op_seq && !op_rand && !op_pregen) {
+        op_seq = true;
+    }
+
+    // Check if the user has selected at least one access type
+    if ((op_seq && op_rand) || (op_seq && op_pregen) || (op_rand && op_pregen)) {
+        printf("Only one access type can be specified.\n");
+        print_usage(argv[0]);
+        exit(0);
     }
 
 }
@@ -149,14 +154,14 @@ int main(int argc, char *argv[]) {
     }
 
     // Pregen array initialization
-    int *pgn_addr = malloc(N_OPERATIONS * sizeof(int));
-    for (register int i = 0; i < N_OPERATIONS; i++) {
+    int *pgn_addr = malloc(n_operations * sizeof(int));
+    for (register int i = 0; i < n_operations; i++) {
         pgn_addr[i] = gen_address_CL64(&seed, data_len);
     }
 
     // Main loop
     gettimeofday(&tstart, NULL);
-    for (register int i = 0; i < N_OPERATIONS; i++) {
+    for (register int i = 0; i < n_operations; i++) {
 
         if (op_seq)
             offset = (offset + cache_line_size) % data_len;
@@ -179,8 +184,13 @@ int main(int argc, char *argv[]) {
     gettimeofday(&tend, NULL);
 
     // Print results
-    unsigned long duration = time_diff(&tstart, &tend) - (spinloop_duration); // mainloop_duration - spinloop_duration
-    float tp = (float) N_OPERATIONS / (((float) duration) / 1000); // In accesses per millisecond
+
+    float tp = 0;
+    if (n_operations > 0) {
+        unsigned long duration = time_diff(&tstart, &tend) - (spinloop_duration); // mainloop_duration - spinloop_duration
+        tp = (float) n_operations / (((float) duration) / 1000); // In accesses per millisecond
+    }
+
     if (op_csv) printf("%f\n", tp);
     else printf("throughput: %f op/ms\n", tp);
 

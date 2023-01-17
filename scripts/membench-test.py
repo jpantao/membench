@@ -10,14 +10,6 @@ import subprocess
 DRAM = (0, 0)
 PMEM = (3, 1)
 
-COMPILER_FLAGS = [
-    '-O0',
-    '-O1',
-    '-O2',
-    '-O3',
-]
-
-
 PERF_EVENTS = [
     "cache-misses",
     "L1-dcache-load-misses",
@@ -71,11 +63,11 @@ def extract_sec_time_elapsed(perf_out):
     return
 
 
-def run_membench(ex, flags, numa_node, cpu_node, iterations):
+def run_membench(ex, flags, numa_node, cpu_node, iterations, n_operations):
     print(f"Running {ex} with flags {flags} on numa node {numa_node} and cpu node {cpu_node}, {iterations} it")
     event_str = ','.join(PERF_EVENTS)
     c = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{args.build_dir}/{ex} " \
-        f"-c -w {iterations} {flags}"
+        f"-c -w {iterations} -o {n_operations} {flags}"
     p = subprocess.run(shlex.split(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # print(p.stdout.decode())
     # print(p.stderr.decode())
@@ -87,29 +79,29 @@ def run_membench(ex, flags, numa_node, cpu_node, iterations):
     return out_dict
 
 
-def benchmark_node(node_kind, iterations):
+def benchmark_node(node_kind, iterations, n_operations):
     # print(f"Running benchmark on {node_kind} node")
     node = DRAM if node_kind == 'dram' else PMEM
 
     rows = list()
     rows.append({'node_kind': node_kind, 'access_pattern': 'seq', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-s', node[0], node[1], w)})
+                 **run_membench('membench', '-s', node[0], node[1], iterations, n_operations)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'pgn', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-g', node[0], node[1], w)})
+                 **run_membench('membench', '-g', node[0], node[1], iterations, n_operations)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'rnd', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-r', node[0], node[1], w)})
+                 **run_membench('membench', '-r', node[0], node[1], iterations, n_operations)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'seq_prefetch', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-s -p', node[0], node[1], w)})
+                 **run_membench('membench', '-s -p', node[0], node[1], iterations, n_operations)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'pgn_prefetch', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-g -p', node[0], node[1], w)})
+                 **run_membench('membench', '-g -p', node[0], node[1], iterations, n_operations)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'rnd_prefetch', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-r -p', node[0], node[1], w)})
+                 **run_membench('membench', '-r -p', node[0], node[1], iterations, n_operations)})
     return rows
 
 
 def benchmark_node_baseline(node_kind, ex):
     node = DRAM if node_kind == 'dram' else PMEM
-    return {'node_kind': node_kind, 'exec': ex, **run_membench(ex, '', node[0], node[1], 0)}
+    return {'node_kind': node_kind, 'exec': ex, **run_membench(ex, '', node[0], node[1], 0, 0)}
 
 
 if __name__ == '__main__':
@@ -130,54 +122,62 @@ if __name__ == '__main__':
             "mem_load_retired.local_pmm"
         ]
 
+    n_operations = [0, 1_000_000, 10_000_000, 100_000_000]
+    compiler_flags = ['-O0', '-O3']
     runs = range(1, int(args.n_runs) + 1)
-
-    range_1 = range(0, 4000, 500)
-    range_2 = range(4000, 5001, 500)
-    spinloop_iterations = list(range_1) + list(range_2)
+    spinloop_iterations = list(range(0, 5001, 500))
 
     os.makedirs('logs', exist_ok=True)
 
-    for flag in COMPILER_FLAGS:
-        print(f"--- Running baseline with flag {flag} ---")
-        f = open(f'logs/{args.test_name}{flag}.csv', 'w')
+    for n in n_operations:
+        print(f"Running benchmark with {n} operations")
 
-        fieldnames = ['exec', 'run', 'node_kind', 'access_pattern', 'spinloop_iterations', 'throughput',
-                      'seconds-time-elapsed', *PERF_EVENTS]
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
+        for flag in compiler_flags:
+            print(f"--- Running baseline with flag {flag} ---")
+            if n == 0:
+                filename = f'logs/{args.test_name}_0_{flag[1:]}.csv'
+            else:
+                filename = f'logs/{args.test_name}_{n/1_000_000}M_{flag[1:]}'
+            f = open(filename, 'w')
 
-        # clean and build
-        subprocess.run(shlex.split('make clean --directory build'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        subprocess.run(shlex.split(f'cmake -B build -DCMAKE_C_FLAGS="{flag}"'))
-        subprocess.run(shlex.split('make --directory build'))
+            fieldnames = ['exec', 'run', 'node_kind', 'access_pattern', 'spinloop_iterations', 'throughput',
+                          'seconds-time-elapsed', *PERF_EVENTS]
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
 
-        # print(f'Iteration range: {spinloop_iterations}')
-        for r in runs:
-            print(f'--- Run {r} ---')
+            # clean and build
+            subprocess.run(shlex.split('make clean --directory build'), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(shlex.split(f'cmake -B build -DCMAKE_C_FLAGS="{flag}"'))
+            subprocess.run(shlex.split('make --directory build'))
 
-            print('-> Baseline tests ')
-            writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_base')})
-            writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_data_init')})
-            writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_pregen_init')})
+            # print(f'Iteration range: {spinloop_iterations}')
+            for r in runs:
+                print(f'--- Run {r} ---')
 
-            if not args.dram_only:
-                writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_base')})
-                writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_data_init')})
-                writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_pregen_init')})
+                print('-> Baseline tests ')
+                writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_base')})
+                writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_data_init')})
+                writer.writerow({'run': r, **benchmark_node_baseline('dram', 'membench_pregen_init')})
 
-            f.flush()
-
-            print(f'-> Membench tests')
-            for w in spinloop_iterations:
-                for row in benchmark_node('dram', w):
-                    writer.writerow({'exec': 'membench', 'run': r, **row})
                 if not args.dram_only:
-                    for row in benchmark_node('pmem', w):
-                        writer.writerow({'exec': 'membench', 'run': r, **row})
+                    writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_base')})
+                    writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_data_init')})
+                    writer.writerow({'run': r, **benchmark_node_baseline('pmem', 'membench_pregen_init')})
+
                 f.flush()
 
-        f.close()
-        print(f"----Done with flag {flag} ---------------")
+                print(f'-> Membench tests')
+                for w in spinloop_iterations:
+                    for row in benchmark_node('dram', w, n):
+                        writer.writerow({'exec': 'membench', 'run': r, **row})
+                    if not args.dram_only:
+                        for row in benchmark_node('pmem', w, n):
+                            writer.writerow({'exec': 'membench', 'run': r, **row})
+                    f.flush()
+
+            f.close()
+            print(f"----Done with flag {flag} ---------------")
+
+        print(f"----Done with {n} operations ---------------")
 
     print('--- Finished ---')
