@@ -16,6 +16,7 @@ bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 int spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
 int n_operations = DEFAULT_N_OPERATIONS; // Number of operations to perform = 0
 
+// TODO: update message to reflect the new options (-o)
 void print_help(char *exec_name) {
     printf("Usage: %s [OPTION]...\n", exec_name);
     printf("Benchmark different kinds of memory accesses.\n");
@@ -39,7 +40,7 @@ void print_help(char *exec_name) {
 
 void print_usage(char *exec_name) {
     printf("Usage: %s [OPTION]....\n", exec_name);
-    printf("Try 'grep -h' for more information.\n");
+    printf("Try 'membench -h' for more information.\n");
 }
 
 static __inline__ uint64_t access_memory(register uint64_t *address) {
@@ -48,6 +49,11 @@ static __inline__ uint64_t access_memory(register uint64_t *address) {
     return fake;
 }
 
+/**
+ * @param start
+ * @param stop
+ * @return time difference in microseconds
+ */
 static __inline__ unsigned long time_diff(struct timeval *start, struct timeval *stop) {
     register unsigned long sec_res = stop->tv_sec - start->tv_sec;
     register unsigned long usec_res = stop->tv_usec - start->tv_usec;
@@ -100,6 +106,9 @@ void argparse(int argc, char *argv[]) {
             case 'w':
                 spinloop_iterations = atoi(argv[++i]);
                 break;
+            case 'o':
+                n_operations = atoi(argv[++i]);
+                break;
             case 'h':
                 print_help(argv[0]);
                 exit(0);
@@ -135,7 +144,7 @@ int main(int argc, char *argv[]) {
     unsigned int seed = 0;
 
     struct timeval spinloop_tstart, spinloop_tend;
-    register unsigned long spinloop_duration = 0;
+    register double total_spinloop_duration = 0;
     register int offset = 0;
 
     int data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH; // In bytes
@@ -152,7 +161,6 @@ int main(int argc, char *argv[]) {
     // Pregen array initialization
 
     // Main loop
-
 
     // Print results
 

@@ -102,11 +102,8 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
     means = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='mean')
     errors = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='std')
 
-    # if metric == 'l1d_pend_miss.pending_cycles' and access_pattern == 'rnd':
-    #     print(f'--- min\n {means.min()}')
-    #     print(f'--- max\n {means.max()}')
-
-    # print(f'pattern: {access_pattern}, min: {means.min().min()} max: {means.max().max()}')
+    # means = df_loc.pivot_table(metric, 'spinloop_duration', ['access_pattern', 'node_kind'], aggfunc='mean')
+    # errors = df_loc.pivot_table(metric, 'spinloop_duration', ['access_pattern', 'node_kind'], aggfunc='std')
 
     if ymax is None:
         means.plot(style='.-', logy=logy)
@@ -173,4 +170,9 @@ if __name__ == '__main__':
     print(f'Generating plots for {test_name}')
     # gen_baseline_plots(df)
     gen_spinloop_plots(df)
+    # cache_misses = df['cache-misses'].mean()
+    # print(f'Average cache misses:\t{round(cache_misses/1000000, 2)}M')
+    # l1_misses = df['L1-dcache-load-misses'].mean()
+    # print(f'Average L1 misses:\t{round(l1_misses/1000000, 2)}M')
     print(f'Plots saved in figs')
+    print('')

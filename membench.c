@@ -16,7 +16,7 @@ bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 int spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
 int n_operations = DEFAULT_N_OPERATIONS; // Number of operations to perform = 0
 
-// TODO: update mesage to reflect the new options (-o)
+// TODO: update message to reflect the new options (-o)
 void print_help(char *exec_name) {
     printf("Usage: %s [OPTION]...\n", exec_name);
     printf("Benchmark different kinds of memory accesses.\n");
@@ -49,6 +49,11 @@ static __inline__ uint64_t access_memory(register uint64_t *address) {
     return fake;
 }
 
+/**
+ * @param start
+ * @param stop
+ * @return time difference in microseconds
+ */
 static __inline__ unsigned long time_diff(struct timeval *start, struct timeval *stop) {
     register unsigned long sec_res = stop->tv_sec - start->tv_sec;
     register unsigned long usec_res = stop->tv_usec - start->tv_usec;
@@ -139,7 +144,7 @@ int main(int argc, char *argv[]) {
     unsigned int seed = 0;
 
     struct timeval spinloop_tstart, spinloop_tend;
-    register unsigned long spinloop_duration = 0;
+    register double total_spinloop_duration = 0;
     register int offset = 0;
 
     int data_size = DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH; // In bytes
@@ -176,7 +181,7 @@ int main(int argc, char *argv[]) {
         gettimeofday(&spinloop_tstart, NULL);
         spinloop(spinloop_iterations);
         gettimeofday(&spinloop_tend, NULL);
-        spinloop_duration += time_diff(&spinloop_tstart, &spinloop_tend);
+        total_spinloop_duration += time_diff(&spinloop_tstart, &spinloop_tend);
 
         // Access memory: now load + store
         data[offset] = access_memory(data + offset);
@@ -187,12 +192,17 @@ int main(int argc, char *argv[]) {
 
     float tp = 0;
     if (n_operations > 0) {
-        unsigned long duration = time_diff(&tstart, &tend) - (spinloop_duration); // mainloop_duration - spinloop_duration
+        unsigned long duration = time_diff(&tstart, &tend) - (total_spinloop_duration); // mainloop_duration - total_spinloop_duration
         tp = (float) n_operations / (((float) duration) / 1000); // In accesses per millisecond
     }
 
-    if (op_csv) printf("%f\n", tp);
-    else printf("throughput: %f op/ms\n", tp);
+    double spinloop_duration = 0;
+    if(total_spinloop_duration > 0) {
+        spinloop_duration = total_spinloop_duration / n_operations / 1000; // In milliseconds
+    }
+
+    if (op_csv) printf("%f,%f\n", tp, spinloop_duration);
+    else printf("throughput: %f op/ms\ntotal_spinloop_duration: %f\n", tp, spinloop_duration);
 
     return 0;
 }

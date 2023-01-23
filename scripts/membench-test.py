@@ -48,6 +48,15 @@ def extract_throughput(stdout):
     return stdout.decode('utf-8').strip()
 
 
+def process_membench_stdout(stdout):
+    output = stdout.decode('utf-8').strip().split(',')
+    if len(output) == 1:
+        return None, None
+    throughput = output[0]
+    sl_duration = output[1]
+    return throughput, sl_duration
+
+
 def extract_perf_results(perf_out):
     lines = perf_out.decode('utf-8').strip().split('\n')[2:]
     lines = filter(is_event, lines)
@@ -69,10 +78,12 @@ def run_membench(ex, flags, numa_node, cpu_node, iterations, n_operations):
     c = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{args.build_dir}/{ex} " \
         f"-c -w {iterations} -o {n_operations} {flags}"
     p = subprocess.run(shlex.split(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    throughput, sl_duration = process_membench_stdout(p.stdout)
     # print(p.stdout.decode())
     # print(p.stderr.decode())
     out_dict = {
-        'throughput': extract_throughput(p.stdout),
+        'throughput': throughput,
+        'spinloop_duration': sl_duration,
         'seconds-time-elapsed': extract_sec_time_elapsed(p.stderr),
         **dict(zip(PERF_EVENTS, extract_perf_results(p.stderr)))
     }
@@ -123,7 +134,7 @@ if __name__ == '__main__':
         ]
 
     n_operations = [0, 1_000_000, 10_000_000, 100_000_000]
-    compiler_flags = ['-O0', '-O3']
+    compiler_flags = ['-O3']  # , '-O0']
     runs = range(1, int(args.n_runs) + 1)
     spinloop_iterations = list(range(0, 5001, 500))
 
@@ -137,11 +148,11 @@ if __name__ == '__main__':
             if n == 0:
                 filename = f'logs/{args.test_name}_0_{flag[1:]}.csv'
             else:
-                filename = f'logs/{args.test_name}_{n/1_000_000}M_{flag[1:]}'
+                filename = f'logs/{args.test_name}_{int(n / 1_000_000)}M_{flag[1:]}.csv'
             f = open(filename, 'w')
 
             fieldnames = ['exec', 'run', 'node_kind', 'access_pattern', 'spinloop_iterations', 'throughput',
-                          'seconds-time-elapsed', *PERF_EVENTS]
+                          'seconds-time-elapsed', 'spinloop_duration', *PERF_EVENTS]
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
 
