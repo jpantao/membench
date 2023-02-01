@@ -15,6 +15,7 @@
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 int spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
 int n_operations = DEFAULT_N_OPERATIONS; // Number of operations to perform = 0
+int pgn_len = DEFAULT_N_OPERATIONS;
 
 // TODO: update message to reflect the new options (-o)
 void print_help(char *exec_name) {
@@ -151,15 +152,6 @@ int main(int argc, char *argv[]) {
     int data_len =
             DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH / DATA_UNIT_SIZE; // Number of positions in the data array = 134,217,728
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // Number of data array positions per cache line
-
-    // Data initialization
-
-    // Pregen array initialization
-
-    // Main loop
-
-    // Print results
-
 
 
     return 0;

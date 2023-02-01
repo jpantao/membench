@@ -15,6 +15,7 @@
 bool op_seq, op_rand, op_pregen, op_prefetch, op_csv = false;
 int spinloop_iterations = DEFAULT_SPINLOOP_ITERATIONS;
 int n_operations = DEFAULT_N_OPERATIONS; // Number of operations to perform = 0
+int pgn_len = DEFAULT_N_OPERATIONS;
 
 // TODO: update message to reflect the new options (-o)
 void print_help(char *exec_name) {
@@ -157,12 +158,6 @@ int main(int argc, char *argv[]) {
     for (register int i = 0; i < data_len; i++) {
         data[i] = gen_address_CL64(&seed, data_len);
     }
-
-    // Pregen array initialization
-
-    // Main loop
-
-    // Print results
 
     return 0;
 }
