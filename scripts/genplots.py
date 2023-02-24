@@ -25,6 +25,7 @@ METRICS = [
     # "sw_prefetch_access.prefetchw",
     # "sw_prefetch_access.t0",
     # "sw_prefetch_access.t1_t2",
+    "context-switches",
     # "branch-misses",
     # "branches",
     # "cpu-cycles",
@@ -53,6 +54,7 @@ YMAX = {
     "sw_prefetch_access.t0": None,
     "sw_prefetch_access.t1_t2": None,
     "branch-misses": 2e9,
+    "context-switches": None,
     "branches": 2e9,
     "cpu-cycles": None,
     "instructions": None,
@@ -79,6 +81,7 @@ ROTATION = {
     "sw_prefetch_access.prefetchw": 90,
     "sw_prefetch_access.t0": 90,
     "sw_prefetch_access.t1_t2": 90,
+    "context-switches": None,
     "branch-misses": 90,
     "branches": 90,
     "cpu-cycles": 90,
@@ -98,12 +101,20 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
         df_loc = data[
             ((data['access_pattern'] == f'{access_pattern}_prefetch') | (data['access_pattern'] == access_pattern))
             & (data['exec'] == 'membench') & (data['node_type'] == node_type)]
-
+    # print(df_loc)
     means = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='mean')
     errors = df_loc.pivot_table(metric, 'spinloop_iterations', ['access_pattern', 'node_kind'], aggfunc='std')
 
-    # means = df_loc.pivot_table(metric, 'spinloop_duration', ['access_pattern', 'node_kind'], aggfunc='mean')
+    # map spinloop_iterations to spinloop_duration ignoring access_pattern and node_kind
+    spinloop_duration = df_loc.pivot_table('spinloop_duration', 'spinloop_iterations', [], aggfunc='mean')
+
     # errors = df_loc.pivot_table(metric, 'spinloop_duration', ['access_pattern', 'node_kind'], aggfunc='std')
+
+    # print(spinloop_duration)
+
+    # plot means with spinloop_duration as x-axis
+    means.index = spinloop_duration['spinloop_duration']
+    # print(means)
 
     if ymax is None:
         means.plot(style='.-', logy=logy)
@@ -113,6 +124,9 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
     # plt.ticklabel_format(style='plain', axis='y')
     plt.title(f'{metric} for {access_pattern} access pattern')
     plt.savefig(f'{out_dir}/spinloop_{access_pattern}_{metric}.jpeg')
+    # plt.show()
+
+
 
 
 def gen_spinloop_plots(data):
@@ -168,11 +182,11 @@ if __name__ == '__main__':
     df = df.drop(columns=['run'], axis=0)
 
     print(f'Generating plots for {test_name}')
-    # gen_baseline_plots(df)
+    gen_baseline_plots(df)
     gen_spinloop_plots(df)
     cache_misses = df['cache-misses'].mean()
-    print(f'Average cache misses:\t{round(cache_misses/1000000, 2)}M')
+    print(f'Average cache misses:\t{round(cache_misses / 1000000, 2)}M')
     l1_misses = df['L1-dcache-load-misses'].mean()
-    print(f'Average L1 misses:\t{round(l1_misses/1000000, 2)}M')
+    print(f'Average L1 misses:\t{round(l1_misses / 1000000, 2)}M')
     print(f'Plots saved in figs')
     print('')

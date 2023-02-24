@@ -159,11 +159,12 @@ int main(int argc, char *argv[]) {
         data[i] = gen_address_CL64(&seed, data_len);
     }
 
-    // Pregen array initialization
-    int *pgn_addr = malloc(pgn_len * sizeof(int));
-    for (register int i = 0; i < pgn_len; i++) {
+    // Pregen array initialization -> expected misses ~= DEFAULT_N_OPERATIONS = 100,000,000
+    int *pgn_addr = malloc(DEFAULT_N_OPERATIONS * sizeof(int));
+    for (register int i = 0; i < DEFAULT_N_OPERATIONS; i++) {
         pgn_addr[i] = gen_address_CL64(&seed, data_len);
     }
+
 
     return 0;
 }

@@ -28,6 +28,7 @@ PERF_EVENTS = [
     "sw_prefetch_access.t1_t2",
     "branch-misses",
     "branches",
+    "context-switches",
     "cpu-cycles",
     "instructions"
 ]
@@ -133,10 +134,10 @@ if __name__ == '__main__':
             "mem_load_retired.local_pmm"
         ]
 
-    n_operations = [0, 1_000_000, 10_000_000, 100_000_000]
+    n_operations = [100_000_000, 10_000_000, 1_000_000, 0]
     compiler_flags = ['-O3']  # , '-O0']
     runs = range(1, int(args.n_runs) + 1)
-    spinloop_iterations = list(range(0, 5001, 500))
+    spinloop_iterations = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     os.makedirs('logs', exist_ok=True)
 

@@ -7,7 +7,7 @@
 
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH (1024*1024*1024) // In bytes (1GB)
 #define DEFAULT_SPINLOOP_ITERATIONS 0
-#define DEFAULT_N_OPERATIONS 10000000 // Number of operations to perform = 10M
+#define DEFAULT_N_OPERATIONS 100000000 // Number of operations to perform = 10M
 
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes = 8
 #define CACHE_LINE_SIZE     64 // In bytes
@@ -153,15 +153,15 @@ int main(int argc, char *argv[]) {
             DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH / DATA_UNIT_SIZE; // Number of positions in the data array = 134,217,728
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // Number of data array positions per cache line
 
-    // Data initialization
+    // Data initialization -> expected misses ~= 134,217,728
     uint64_t *data = malloc(data_size);
     for (register int i = 0; i < data_len; i++) {
         data[i] = gen_address_CL64(&seed, data_len);
     }
 
-    // Pregen array initialization
-    int *pgn_addr = malloc(pgn_len * sizeof(int));
-    for (register int i = 0; i < pgn_len; i++) {
+    // Pregen array initialization -> expected misses ~= DEFAULT_N_OPERATIONS = 100,000,000
+    int *pgn_addr = malloc(DEFAULT_N_OPERATIONS * sizeof(int));
+    for (register int i = 0; i < DEFAULT_N_OPERATIONS; i++) {
         pgn_addr[i] = gen_address_CL64(&seed, data_len);
     }
 
