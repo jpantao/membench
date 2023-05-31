@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
 
     double spinloop_duration = 0;
     if(total_spinloop_duration > 0) {
-        spinloop_duration = total_spinloop_duration / n_operations / 1000; // In milliseconds
+        spinloop_duration = (total_spinloop_duration / n_operations) / 1000; // In milliseconds
     }
 
     if (op_csv) printf("%f,%f\n", tp, spinloop_duration);

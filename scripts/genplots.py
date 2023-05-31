@@ -18,14 +18,14 @@ METRICS = [
     "LLC-store-misses",
     # "LLC-stores",
     # "l1d_pend_miss.pending",
-    "l1d_pend_miss.pending_cycles",
+    # "l1d_pend_miss.pending_cycles",
     # "l1d.replacement",
     # "l1d_pend_miss.fb_full",
     # "sw_prefetch_access.nta",
     # "sw_prefetch_access.prefetchw",
     # "sw_prefetch_access.t0",
     # "sw_prefetch_access.t1_t2",
-    "context-switches",
+    # "context-switches",
     # "branch-misses",
     # "branches",
     # "cpu-cycles",
@@ -123,10 +123,8 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
 
     # plt.ticklabel_format(style='plain', axis='y')
     plt.title(f'{metric} for {access_pattern} access pattern')
-    plt.savefig(f'{out_dir}/spinloop_{access_pattern}_{metric}.jpeg')
+    plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{access_pattern}_{metric}.jpeg')
     # plt.show()
-
-
 
 
 def gen_spinloop_plots(data):
@@ -163,7 +161,7 @@ def gen_baseline_plots(data):
                 continue
             ax.bar_label(container, labels=[f'{x:,.0f}' for x in container.datavalues], rotation=ROTATION[m], padding=3)
         plt.title(f'Baseline for {m}')
-        plt.savefig(f'{out_dir}/baseline_{m}.jpeg')
+        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.jpeg')
 
 
 if __name__ == '__main__':
