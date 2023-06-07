@@ -34,7 +34,7 @@ def gen_plots():
         df.hist(column=['count'], grid=True, bins=bins, rwidth=0.9, color='#607c8e')
         plt.title(f'{exe.split("_")[1]} - Random generation distribution')
         plt.xticks(bins)
-        plt.savefig(f'figs/{exe}.png')
+        plt.savefig(f'figs/{exe}.pdf')
 
 
 if __name__ == '__main__':
