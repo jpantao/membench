@@ -134,8 +134,8 @@ if __name__ == '__main__':
             "mem_load_retired.local_pmm"
         ]
 
-    n_operations = [100_000_000, 10_000_000, 1_000_000, 0]
-    compiler_flags = ['-O3', '-02', '-01', '-O0']
+    n_operations = [100_000_000]
+    compiler_flags = ['-O3', '-O0']
     runs = range(1, int(args.n_runs) + 1)
     spinloop_iterations = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
@@ -178,14 +178,14 @@ if __name__ == '__main__':
 
                 f.flush()
 
-                print(f'-> Membench tests')
-                for w in spinloop_iterations:
-                    for row in benchmark_node('dram', w, n):
-                        writer.writerow({'exec': 'membench', 'run': r, **row})
-                    if not args.dram_only:
-                        for row in benchmark_node('pmem', w, n):
-                            writer.writerow({'exec': 'membench', 'run': r, **row})
-                    f.flush()
+                # print(f'-> Membench tests')
+                # for w in spinloop_iterations:
+                #     for row in benchmark_node('dram', w, n):
+                #         writer.writerow({'exec': 'membench', 'run': r, **row})
+                #     if not args.dram_only:
+                #         for row in benchmark_node('pmem', w, n):
+                #             writer.writerow({'exec': 'membench', 'run': r, **row})
+                #     f.flush()
 
             f.close()
             print(f"----Done with flag {flag} ---------------")

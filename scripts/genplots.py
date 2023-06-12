@@ -13,9 +13,9 @@ METRICS = [
     "cache-misses",
     "L1-dcache-load-misses",
     # "L1-dcache-loads",
-    "LLC-load-misses",
+    # "LLC-load-misses",
     # "LLC-loads",
-    "LLC-store-misses",
+    # "LLC-store-misses",
     # "LLC-stores",
     # "l1d_pend_miss.pending",
     # "l1d_pend_miss.pending_cycles",
@@ -36,26 +36,26 @@ METRICS = [
 ]
 
 YMAX = {
-    "throughput": 70000,
-    "seconds-time-elapsed": 200,
-    "cache-misses": 4e8,
-    "L1-dcache-load-misses": 4e8,
-    "L1-dcache-loads": 9e9,
-    "LLC-load-misses": 4e8,
+    "throughput": [0, 70000],
+    "seconds-time-elapsed": [None, 200],
+    "cache-misses": [None, 4e8],
+    "L1-dcache-load-misses": [1.6e8, 1.9e8],
+    "L1-dcache-loads": [None, 9e9],
+    "LLC-load-misses": [None, 4e8],
     "LLC-loads": None,
-    "LLC-store-misses": 4e8,
+    "LLC-store-misses": [None, 4e8],
     "LLC-stores": None,
-    "l1d_pend_miss.pending": 1.75e11,
-    "l1d_pend_miss.pending_cycles": 1.75e11,
+    "l1d_pend_miss.pending": [None, 1.75e11],
+    "l1d_pend_miss.pending_cycles": [None, 1.75e11],
     "l1d.replacement": None,
     "l1d_pend_miss.fb_full": None,
-    "sw_prefetch_access.nta": 1.2e8,
+    "sw_prefetch_access.nta": [None, 1.2e8],
     "sw_prefetch_access.prefetchw": None,
     "sw_prefetch_access.t0": None,
     "sw_prefetch_access.t1_t2": None,
-    "branch-misses": 2e9,
+    "branch-misses": [None, 2e9],
     "context-switches": None,
-    "branches": 2e9,
+    "branches": [None, 2e9],
     "cpu-cycles": None,
     "instructions": None,
     # "mem_load_retired.l3_miss": None,
@@ -119,11 +119,11 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
     if ymax is None:
         means.plot(style='.-', logy=logy)
     else:
-        means.plot(style='.-', logy=logy, ylim=([0, ymax]))
+        means.plot(style='.-', logy=logy, ylim=ymax)
 
     # plt.ticklabel_format(style='plain', axis='y')
     plt.title(f'{metric} for {access_pattern} access pattern')
-    plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{access_pattern}_{metric}.jpeg')
+    plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{access_pattern}_{metric}.pdf')
     # plt.show()
 
 
@@ -143,7 +143,6 @@ def gen_baseline_plots(data):
                       | (data['exec'] == 'membench_data_init')
                       | (data['exec'] == 'membench_pregen_init'))]
     baselines = baselines.drop(columns=['access_pattern', 'spinloop_iterations', 'throughput'], axis=0)
-
     for m in METRICS:
         if m == 'throughput':
             continue
@@ -154,14 +153,14 @@ def gen_baseline_plots(data):
         if YMAX[m] is None:
             ax = means.plot.bar(rot=0, yerr=errors)
         else:
-            ax = means.plot.bar(rot=0, yerr=errors, ylim=([None, YMAX[m]]))
+            ax = means.plot.bar(rot=0, yerr=errors, ylim=([None, YMAX[m][1]]))
         plt.legend(loc='upper left')
         for container in ax.containers:
             if isinstance(container, ErrorbarContainer):
                 continue
             ax.bar_label(container, labels=[f'{x:,.0f}' for x in container.datavalues], rotation=ROTATION[m], padding=3)
         plt.title(f'Baseline for {m}')
-        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.jpeg')
+        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.pdf')
 
 
 if __name__ == '__main__':
