@@ -13,13 +13,15 @@ METRICS = [
     "cache-misses",
     "L1-dcache-load-misses",
     # "L1-dcache-loads",
-    # "LLC-load-misses",
+    "dTLB-load-misses",
+    "dTLB-store-misses",
+    "LLC-load-misses",
     # "LLC-loads",
-    # "LLC-store-misses",
+    "LLC-store-misses",
     # "LLC-stores",
     # "l1d_pend_miss.pending",
     # "l1d_pend_miss.pending_cycles",
-    # "l1d.replacement",
+    "l1d.replacement",
     # "l1d_pend_miss.fb_full",
     # "sw_prefetch_access.nta",
     # "sw_prefetch_access.prefetchw",
@@ -38,16 +40,18 @@ METRICS = [
 YMAX = {
     "throughput": [0, 70000],
     "seconds-time-elapsed": [None, 200],
-    "cache-misses": [None, 4e8],
+    "cache-misses": [1e8, 1.1e8],
     "L1-dcache-load-misses": [1.6e8, 1.9e8],
-    "L1-dcache-loads": [None, 9e9],
-    "LLC-load-misses": [None, 4e8],
+    "L1-dcache-loads": [1.6e8, 1.9e8],
+    "dTLB-load-misses" : None,
+    "dTLB-store-misses" : None,
+    "LLC-load-misses": None,
     "LLC-loads": None,
-    "LLC-store-misses": [None, 4e8],
+    "LLC-store-misses": None,
     "LLC-stores": None,
     "l1d_pend_miss.pending": [None, 1.75e11],
     "l1d_pend_miss.pending_cycles": [None, 1.75e11],
-    "l1d.replacement": None,
+    "l1d.replacement": [1.6e8, 1.9e8],
     "l1d_pend_miss.fb_full": None,
     "sw_prefetch_access.nta": [None, 1.2e8],
     "sw_prefetch_access.prefetchw": None,
@@ -69,6 +73,8 @@ ROTATION = {
     "cache-misses": 90,
     "L1-dcache-load-misses": 90,
     "L1-dcache-loads": 90,
+    "dTLB-load-misses": 90,
+    "dTLB-store-misses": 90,
     "LLC-load-misses": 90,
     "LLC-loads": 90,
     "LLC-store-misses": 90,
@@ -123,7 +129,7 @@ def plot_access(data, access_pattern, metric, node_type=None, logy=False, ymax=N
 
     # plt.ticklabel_format(style='plain', axis='y')
     plt.title(f'{metric} for {access_pattern} access pattern')
-    plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{access_pattern}_{metric}.pdf')
+    plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{access_pattern}_{metric}.png')
     # plt.show()
 
 
@@ -160,7 +166,7 @@ def gen_baseline_plots(data):
                 continue
             ax.bar_label(container, labels=[f'{x:,.0f}' for x in container.datavalues], rotation=ROTATION[m], padding=3)
         plt.title(f'Baseline for {m}')
-        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.pdf')
+        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.png')
 
 
 if __name__ == '__main__':

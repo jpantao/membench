@@ -14,13 +14,16 @@ PERF_EVENTS = [
     "cache-misses",
     "L1-dcache-load-misses",
     "L1-dcache-loads",
+    "mem_load_retired.l1_miss",
+    "dTLB-load-misses",
+    "dTLB-store-misses",
     "LLC-load-misses",
     "LLC-loads",
     "LLC-store-misses",
     "LLC-stores",
+    "l1d.replacement",
     "l1d_pend_miss.pending",
     "l1d_pend_miss.pending_cycles",
-    "l1d.replacement",
     "l1d_pend_miss.fb_full",
     "sw_prefetch_access.nta",
     "sw_prefetch_access.prefetchw",
@@ -178,14 +181,14 @@ if __name__ == '__main__':
 
                 f.flush()
 
-                # print(f'-> Membench tests')
-                # for w in spinloop_iterations:
-                #     for row in benchmark_node('dram', w, n):
-                #         writer.writerow({'exec': 'membench', 'run': r, **row})
-                #     if not args.dram_only:
-                #         for row in benchmark_node('pmem', w, n):
-                #             writer.writerow({'exec': 'membench', 'run': r, **row})
-                #     f.flush()
+                print(f'-> Membench tests')
+                for w in spinloop_iterations:
+                    for row in benchmark_node('dram', w, n):
+                        writer.writerow({'exec': 'membench', 'run': r, **row})
+                    if not args.dram_only:
+                        for row in benchmark_node('pmem', w, n):
+                            writer.writerow({'exec': 'membench', 'run': r, **row})
+                    f.flush()
 
             f.close()
             print(f"----Done with flag {flag} ---------------")

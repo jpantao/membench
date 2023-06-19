@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
     // Data initialization
     uint64_t *data = malloc(data_size);
     for (register int i = 0; i < data_len; i++) {
-        data[i] = 44444;
+        data[i] = gen_address_CL64(&seed, data_len);
     }
 
     return 0;
