@@ -5,6 +5,7 @@ import csv
 import os
 import shlex
 import subprocess
+import time
 
 # numa node, cpu node
 DRAM = (0, 0)
@@ -143,7 +144,7 @@ if __name__ == '__main__':
     spinloop_iterations = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 
     os.makedirs('logs', exist_ok=True)
-
+    exp_time = time.time()
     for n in n_operations:
         print(f"Running benchmark with {n} operations")
 
@@ -165,8 +166,8 @@ if __name__ == '__main__':
             subprocess.run(shlex.split(f'cmake -B build -DCMAKE_C_FLAGS="{flag}"'))
             subprocess.run(shlex.split('make --directory build'))
 
-            # print(f'Iteration range: {spinloop_iterations}')
             for r in runs:
+                t_start = time.time()
                 print(f'--- Run {r} ---')
 
                 print('-> Baseline tests ')
@@ -189,10 +190,13 @@ if __name__ == '__main__':
                         for row in benchmark_node('pmem', w, n):
                             writer.writerow({'exec': 'membench', 'run': r, **row})
                     f.flush()
+                run_time = time.time() - t_start
+                # print runtime in hours
+                print(f'--- Run {r} took {run_time / 3600} hours for flag {flag} ---')
 
             f.close()
             print(f"----Done with flag {flag} ---------------")
 
         print(f"----Done with {n} operations ---------------")
-
+    print(f'--- Experiment took {(time.time() - exp_time) / 3600} hours ---')
     print('--- Finished ---')

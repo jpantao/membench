@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
     // Data initialization -> expected misses ~= 1GB / cache_line_size = 1024*1024*1024 / 64 = 16,777,216
     uint64_t *data = malloc(data_size);
     for (register int i = 0; i < data_len; i++) {
-        data[i] = gen_address_CL64();
+        data[i] = gen_address_CL64(&seed, data_len);
     }
 
     // Pregen array initialization -> expected misses ~= 100000000 * 4 / 64 = 6,250,000
