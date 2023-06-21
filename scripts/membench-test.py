@@ -195,8 +195,6 @@ if __name__ == '__main__':
                 print(f'--- Run {r} took {run_time / 3600} hours for flag {flag} ---')
 
             f.close()
-            print(f"----Done with flag {flag} ---------------")
 
-        print(f"----Done with {n} operations ---------------")
     print(f'--- Experiment took {(time.time() - exp_time) / 3600} hours ---')
-    print('--- Finished ---')
+
