@@ -169,23 +169,11 @@ int main(int argc, char *argv[]) {
     gettimeofday(&tstart, NULL);
     for (register int i = 0; i < n_operations; i++) {
 
-        if (op_seq)
-            offset = (offset + cache_line_size) % data_len;
-        else if (op_rand)
-            offset = gen_address_CL64(&seed, data_len);
-        else if (op_pregen)
-            offset = pgn_addr[i];
-
-        if (op_prefetch)
-            __builtin_prefetch(data + offset, 0, 0);
-
         gettimeofday(&spinloop_tstart, NULL);
         spinloop(spinloop_iterations);
         gettimeofday(&spinloop_tend, NULL);
         total_spinloop_duration += time_diff(&spinloop_tstart, &spinloop_tend);
 
-        // Access memory: now load + store
-        data[offset] = access_memory(data + offset);
     }
     gettimeofday(&tend, NULL);
 

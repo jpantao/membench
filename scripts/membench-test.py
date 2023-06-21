@@ -95,6 +95,18 @@ def run_membench(ex, flags, numa_node, cpu_node, iterations, n_operations):
     return out_dict
 
 
+def run_spinloop(numa_node, cpu_node, iterations, n_operations):
+    print(f"Running spinloop with {iterations} iterations on numa node {numa_node} and cpu node {cpu_node}")
+    event_str = ','.join(PERF_EVENTS)
+    c = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{args.build_dir}/spinloop " \
+        f"{iterations} {n_operations}"
+    p = subprocess.run(shlex.split(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out_dict = {
+        'seconds-time-elapsed': extract_sec_time_elapsed(p.stderr),
+        **dict(zip(PERF_EVENTS, extract_perf_results(p.stderr)))
+    }
+
+
 def benchmark_node(node_kind, iterations, n_operations):
     # print(f"Running benchmark on {node_kind} node")
     node = DRAM if node_kind == 'dram' else PMEM
@@ -118,6 +130,12 @@ def benchmark_node(node_kind, iterations, n_operations):
 def benchmark_node_baseline(node_kind, ex):
     node = DRAM if node_kind == 'dram' else PMEM
     return {'node_kind': node_kind, 'exec': ex, **run_membench(ex, '', node[0], node[1], 0, 0)}
+
+
+def benchmark_sinloop(node_kind, iterations, n_operations):
+    node = DRAM if node_kind == 'dram' else PMEM
+    return {'node_kind': node_kind, 'spinloop_iterations': iterations,
+            **run_membench('membench', '-s', node[0], node[1], iterations, n_operations)}
 
 
 if __name__ == '__main__':
@@ -190,11 +208,12 @@ if __name__ == '__main__':
                         for row in benchmark_node('pmem', w, n):
                             writer.writerow({'exec': 'membench', 'run': r, **row})
                     f.flush()
+
+                # writer.writerow({'run': r, **})
+
                 run_time = time.time() - t_start
-                # print runtime in hours
                 print(f'--- Run {r} took {run_time / 3600} hours for flag {flag} ---')
 
             f.close()
 
     print(f'--- Experiment took {(time.time() - exp_time) / 3600} hours ---')
-
