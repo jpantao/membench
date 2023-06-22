@@ -35,11 +35,21 @@ if __name__ == '__main__':
     os.makedirs(f'{out_dir}', exist_ok=True)
 
     df = pd.read_csv(args.input)
+    print('-' * 100)
     print(df)
+    print('-' * 100)
     # drop run column and pivot by average and stddev
     df = df.drop(columns=['run'], axis=0)
+
+    # drop columns not in metrics
+    # cols = ['exec', 'node_kind', 'access_pattern', 'spinloop_iterations', *metrics.keys()]
+    # print(cols)
+    # df = df.drop(columns=[c for c in df.columns if c not in cols], axis=0)
+
     means = df.pivot_table(index=['exec', 'node_kind', 'access_pattern', 'spinloop_iterations'], aggfunc='mean')
     errors = df.pivot_table(index=['exec', 'node_kind', 'access_pattern', 'spinloop_iterations'], aggfunc='std')
 
     print(means)
+    print('-' * 100)
     print(errors)
+    print('-' * 100)
