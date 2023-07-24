@@ -186,6 +186,7 @@ int main(int argc, char *argv[]) {
 
         // Access memory: now load + store
         data[offset] = access_memory(data + offset);
+
     }
     gettimeofday(&tend, NULL);
 
@@ -193,12 +194,13 @@ int main(int argc, char *argv[]) {
 
     float tp = 0;
     if (n_operations > 0) {
-        unsigned long duration = time_diff(&tstart, &tend) - (total_spinloop_duration); // mainloop_duration - total_spinloop_duration
+        unsigned long duration =
+                time_diff(&tstart, &tend) - (total_spinloop_duration); // mainloop_duration - total_spinloop_duration
         tp = (float) n_operations / (((float) duration) / 1000); // In accesses per millisecond
     }
 
     double spinloop_duration = 0;
-    if(total_spinloop_duration > 0) {
+    if (total_spinloop_duration > 0) {
         spinloop_duration = (total_spinloop_duration / n_operations) / 1000; // In milliseconds
     }
 

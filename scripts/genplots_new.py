@@ -18,6 +18,30 @@ metrics = {
     "dTLB-store-misses": [None, None],
 }
 
+# spinloop
+# metrics = {
+#     "throughput": [0, 70000],
+#     "cache-misses": [0, 0.05e8],
+#     "L1-dcache-load-misses": [0.6e8, 0.8e8],
+#     "l1d.replacement": [0.6e8, 0.8e8],
+#     "LLC-load-misses": [None, None],
+#     "LLC-store-misses": [None, None],
+#     "dTLB-load-misses": [None, None],
+#     "dTLB-store-misses": [None, None],
+# }
+
+# metrics = {
+#     "throughput": [None, None],
+#     "cache-misses": [None, None],
+#     "L1-dcache-load-misses": [None, None],
+#     "l1d.replacement": [None, None],
+#     "LLC-load-misses": [None, None],
+#     "LLC-store-misses": [None, None],
+#     "dTLB-load-misses": [None, None],
+#     "dTLB-store-misses": [None, None],
+# }
+
+
 color_map = {
     "dram": "blue",
     "dram_prefetch": "steelblue",
@@ -61,8 +85,10 @@ def genplot_baseline():
         stdev = df_b.pivot_table(m, 'exec', ['node_kind'], aggfunc='std')
         colors = gen_colors(means.columns)
 
-        ax = means.plot.bar(yerr=stdev, capsize=4, rot=0, ylim=[0, metrics[m][1]], color=colors)
-        # add_bar_labels(ax)
+        ax = means.plot.bar(yerr=stdev, capsize=4, rot=0, ylim=[0, 1e8], color=colors)
+        add_bar_labels(ax)
+        # add_errorbar_labels(ax, stdev)
+        # addlabels(stdev.values.flatten())
         plt.title(f'Baseline for {m}')
         plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.{plot_extension}')
         # plt.show()
@@ -73,7 +99,18 @@ def add_bar_labels(ax):
     for container in ax.containers:
         if isinstance(container, ErrorbarContainer):
             continue
-        ax.bar_label(container, labels=[f'{x:,.0f}' for x in container.datavalues], rotation=0, padding=3)
+        ax.bar_label(container, labels=[f'{x:,.2e}' for x in container.datavalues], rotation=45, padding=3)
+
+def add_errorbar_labels(ax, stddev):
+    for container in ax.containers:
+        if isinstance(container, ErrorbarContainer):
+            print('-----------')
+            print(container)
+            print('-----------')
+            continue
+        print(container.datavalues)
+        print(stddev)
+
 
 
 def genplot_bench():
@@ -111,15 +148,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     test_name = os.path.basename(args.input).split('.')[0]
+    print('-' * 80)
+    print(f'Generating plots for {test_name}')
     out_dir = f'figs/{test_name}'
     os.makedirs(f'{out_dir}', exist_ok=True)
 
     df = pd.read_csv(args.input)
     df = df.drop(columns=['run'], axis=0)
 
-    # print('-' * 100)
-    # print(df)
-    # print('-' * 100)
-
     genplot_baseline()
     genplot_bench()
+    print('-' * 80)

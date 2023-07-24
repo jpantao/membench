@@ -6,6 +6,7 @@ import os
 import shlex
 import subprocess
 import time
+import math as m
 
 # numa node, cpu node
 DRAM = (0, 0)
@@ -192,9 +193,9 @@ if __name__ == '__main__':
                     f.flush()
                 run_time = time.time() - t_start
                 # print runtime in hours
-                print(f'--- Run {r} took {run_time / 3600} hours for flag {flag} ---')
+                print(f'--- Run {r} took {m.ceil(run_time / 3600)} hours for flag {flag} ---')
 
             f.close()
 
-    print(f'--- Experiment took {(time.time() - exp_time) / 3600} hours ---')
+    print(f'--- Experiment took {m.ceil((time.time() - exp_time) / 3600)} hours ---')
 
