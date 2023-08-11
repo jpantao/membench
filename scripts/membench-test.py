@@ -10,7 +10,7 @@ import math as m
 
 # numa node, cpu node
 DRAM = (0, 0)
-PMEM = (3, 1)
+PMEM = (3, 32)
 
 PERF_EVENTS = [
     "cache-misses",
@@ -81,7 +81,9 @@ def extract_sec_time_elapsed(perf_out):
 def run_membench(ex, flags, numa_node, cpu_node, iterations, n_operations):
     print(f"Running {ex} with flags {flags} on numa node {numa_node} and cpu node {cpu_node}, {iterations} it")
     event_str = ','.join(PERF_EVENTS)
-    c = f"numactl --membind={numa_node} --cpubind={cpu_node} perf stat -e {event_str} ./{args.build_dir}/{ex} " \
+    # c = f"numactl --membind={numa_node} --cpunodebind={cpu_node} perf stat -e {event_str} ./{args.build_dir}/{ex} " \
+    #     f"-c -w {iterations} -o {n_operations} {flags}"
+    c = f"numactl --membind={numa_node} --physcpubind={cpu_node} perf stat -e {event_str} ./{args.build_dir}/{ex} " \
         f"-c -w {iterations} -o {n_operations} {flags}"
     p = subprocess.run(shlex.split(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     throughput, sl_duration = process_membench_stdout(p.stdout)
