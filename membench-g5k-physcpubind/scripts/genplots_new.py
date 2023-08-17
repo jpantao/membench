@@ -2,7 +2,6 @@
 
 import os
 import argparse
-import subprocess
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -51,7 +50,7 @@ color_map = {
 }
 
 prefetch_suffix = '_prefetch'
-plot_extension = 'pdf'
+plot_extension = 'png'
 
 
 def get_value_by_partial_key(dictionary, partial_key, default=None):
@@ -73,9 +72,9 @@ def genplot_baseline():
     print('genplot_baseline')
 
     # select only the baseline data
-    df_b = df[((df['exec'] == 'base')
-               | (df['exec'] == 'data_init')
-               | (df['exec'] == 'pregen_init'))]
+    df_b = df[((df['exec'] == 'membench_base')
+               | (df['exec'] == 'membench_data_init')
+               | (df['exec'] == 'membench_pregen_init'))]
 
     for m in metrics:
         if m == 'throughput':
@@ -91,9 +90,7 @@ def genplot_baseline():
         # add_errorbar_labels(ax, stdev)
         # addlabels(stdev.values.flatten())
         plt.title(f'Baseline for {m}')
-        plt.legend(fontsize="xx-small") # using a named size
         plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.{plot_extension}')
-        exec_epspdf(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.{plot_extension}')
         # plt.show()
         plt.close()
 
@@ -102,8 +99,7 @@ def add_bar_labels(ax):
     for container in ax.containers:
         if isinstance(container, ErrorbarContainer):
             continue
-        ax.bar_label(container, labels=[f'{x:,.2f}' for x in container.datavalues], rotation=45, padding=3)
-
+        ax.bar_label(container, labels=[f'{x:,.2e}' for x in container.datavalues], rotation=45, padding=3)
 
 def add_errorbar_labels(ax, stddev):
     for container in ax.containers:
@@ -114,6 +110,7 @@ def add_errorbar_labels(ax, stddev):
             continue
         print(container.datavalues)
         print(stddev)
+
 
 
 def genplot_bench():
@@ -140,27 +137,14 @@ def genplot_bench():
 
         means.plot(style='.-', rot=0, ylim=metrics[m], color=colors)
         plt.title(f'{m} for {p} access pattern')
-        plt.legend(fontsize="small") # using a named size
-        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}')
-        exec_epspdf(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}')
+        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.png')
         # plt.show()
         plt.close()
-
-
-def exec_epspdf(filename):
-    subprocess.run(['epspdf', '-b', filename], stdout=subprocess.DEVNULL)
-    subprocess.run(['rm', f'{filename}.backup'])
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate from membench results')
     parser.add_argument('input', action='store', help='CSV input file')
-
-    # Set font and font size for all text elements in the plot
-    plt.rcParams['font.family'] = 'Sans Serif'  # Change to the font family you desire (e.g., 'sans-serif', 'monospace')
-    plt.rcParams['font.size'] = 14  # Change to the desired font size
-
-
     args = parser.parse_args()
 
     test_name = os.path.basename(args.input).split('.')[0]
@@ -171,13 +155,6 @@ if __name__ == '__main__':
 
     df = pd.read_csv(args.input)
     df = df.drop(columns=['run'], axis=0)
-
-    # convert spinloop_duration from ms to us
-    df['spinloop_duration'] = df['spinloop_duration'] * 1000
-    # convert throughput from ops/s to Kops/s
-    df['throughput'] = df['throughput'] / 1000
-    # remove 'membench_' prefix from exec
-    df['exec'] = df['exec'].str.replace('membench_', '')
 
     genplot_baseline()
     genplot_bench()
