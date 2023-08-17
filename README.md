@@ -85,10 +85,6 @@ argument).
 We calculate the time spent in the main loop and the spinloop separately. In the end, the output of the benchmark is
 the throughput (op/ms) measured as `n_operations / mainloop_duration - spinloop_duration`.
 
-## Evaluation
-
-TODO
-
 ## Usage
 
 To compile the benchmark, run:
