@@ -142,9 +142,9 @@ if __name__ == '__main__':
         ]
 
     n_operations = [100_000_000]
-    # compiler_flags = ['-O3', '-O0']
+    compiler_flags = ['-O3', '-O0']
     # compiler_flags = ['-O0']
-    compiler_flags = ['-O3']
+    # compiler_flags = ['-O3']
     runs = range(1, int(args.n_runs) + 1)
     spinloop_iterations = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
 

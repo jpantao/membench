@@ -7,41 +7,18 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.container import ErrorbarContainer
+from matplotlib.ticker import FuncFormatter
 
 metrics = {
-    "throughput": [0, 70000],
-    "cache-misses": [1e8, 1.1e8],
-    "L1-dcache-load-misses": [1.6e8, 1.9e8],
-    "l1d.replacement": [1.6e8, 1.9e8],
-    "LLC-load-misses": [None, None],
-    "LLC-store-misses": [None, None],
-    "dTLB-load-misses": [None, None],
-    "dTLB-store-misses": [None, None],
+    "throughput": [0, 70],
+    "cache-misses": [100, 110],
+    "L1-dcache-load-misses": [165, 190],
+    # "l1d.replacement": [None, None],
+    # "LLC-load-misses": [None, None],
+    # "LLC-store-misses": [None, None],
+    # "dTLB-load-misses": [None, None],
+    # "dTLB-store-misses": [None, None],
 }
-
-# spinloop
-# metrics = {
-#     "throughput": [0, 70000],
-#     "cache-misses": [0, 0.05e8],
-#     "L1-dcache-load-misses": [0.6e8, 0.8e8],
-#     "l1d.replacement": [0.6e8, 0.8e8],
-#     "LLC-load-misses": [None, None],
-#     "LLC-store-misses": [None, None],
-#     "dTLB-load-misses": [None, None],
-#     "dTLB-store-misses": [None, None],
-# }
-
-# metrics = {
-#     "throughput": [None, None],
-#     "cache-misses": [None, None],
-#     "L1-dcache-load-misses": [None, None],
-#     "l1d.replacement": [None, None],
-#     "LLC-load-misses": [None, None],
-#     "LLC-store-misses": [None, None],
-#     "dTLB-load-misses": [None, None],
-#     "dTLB-store-misses": [None, None],
-# }
-
 
 color_map = {
     "dram": "blue",
@@ -49,6 +26,8 @@ color_map = {
     "pmem": "darkorange",
     "pmem_prefetch": "goldenrod",
 }
+
+line_styles = ['-', '--', '-.', ':']
 
 prefetch_suffix = '_prefetch'
 plot_extension = 'pdf'
@@ -86,13 +65,15 @@ def genplot_baseline():
         stdev = df_b.pivot_table(m, 'exec', ['node_kind'], aggfunc='std')
         colors = gen_colors(means.columns)
 
-        ax = means.plot.bar(yerr=stdev, capsize=4, rot=0, ylim=[0, 1e8], color=colors)
+        ax = means.plot.bar(yerr=stdev, capsize=4, rot=0, ylim=[0, 100], color=colors)
         add_bar_labels(ax)
         # add_errorbar_labels(ax, stdev)
         # addlabels(stdev.values.flatten())
-        plt.title(f'Baseline for {m}')
-        plt.legend(fontsize="xx-small") # using a named size
-        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.{plot_extension}')
+        # plt.title(f'Baseline for {m}')
+        plt.ylabel(f'Count (millions of events)')
+        plt.xlabel('')
+        plt.legend(fontsize="medium", loc='upper left')
+        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.{plot_extension}', bbox_inches='tight')
         exec_epspdf(f'{out_dir}/{out_dir.split("/")[1]}_baseline_{m}.{plot_extension}')
         # plt.show()
         plt.close()
@@ -102,7 +83,7 @@ def add_bar_labels(ax):
     for container in ax.containers:
         if isinstance(container, ErrorbarContainer):
             continue
-        ax.bar_label(container, labels=[f'{x:,.2f}' for x in container.datavalues], rotation=45, padding=3)
+        ax.bar_label(container, labels=[f'{x:,.2f}M' for x in container.datavalues], rotation=45, padding=3)
 
 
 def add_errorbar_labels(ax, stddev):
@@ -138,14 +119,26 @@ def genplot_bench():
         columns = [f'{t[1]}{prefetch_suffix}' if prefetch_suffix in t[0] else t[1] for t in means.columns]
         colors = gen_colors(columns)
 
-        means.plot(style='.-', rot=0, ylim=metrics[m], color=colors)
-        plt.title(f'{m} for {p} access pattern')
-        plt.legend(fontsize="small") # using a named size
-        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}')
+        means.plot(style=line_styles, rot=0, ylim=metrics[m], color=colors)
+        # plt.title(f'{m} for {p} access pattern')
+        if m == 'throughput':
+            plt.ylabel(f'Throughput (Kops/s)')
+        else:
+            plt.ylabel(f'Count (millions of events)')
+        plt.xlabel('Spinloop duration (\u03BCs)')
+
+        if p == 'seq' and m == 'throughput':
+            plt.legend(fontsize="small", loc='lower right')
+        elif p == 'seq':
+            plt.legend(fontsize="small", loc='upper left')
+        else:
+            # remove legend
+            plt.gca().get_legend().remove()
+
+        plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}', bbox_inches='tight')
         exec_epspdf(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}')
         # plt.show()
         plt.close()
-
 
 def exec_epspdf(filename):
     subprocess.run(['epspdf', '-b', filename], stdout=subprocess.DEVNULL)
@@ -158,8 +151,7 @@ if __name__ == '__main__':
 
     # Set font and font size for all text elements in the plot
     plt.rcParams['font.family'] = 'Sans Serif'  # Change to the font family you desire (e.g., 'sans-serif', 'monospace')
-    plt.rcParams['font.size'] = 14  # Change to the desired font size
-
+    plt.rcParams['font.size'] = 18  # Change to the desired font size
 
     args = parser.parse_args()
 
@@ -176,6 +168,11 @@ if __name__ == '__main__':
     df['spinloop_duration'] = df['spinloop_duration'] * 1000
     # convert throughput from ops/s to Kops/s
     df['throughput'] = df['throughput'] / 1000
+    # convert L1-dcache-load-misses to M
+    df['L1-dcache-load-misses'] = df['L1-dcache-load-misses'] / 1_000_000
+    # convert cache-misses to M
+    df['cache-misses'] = df['cache-misses'] / 1_000_000
+
     # remove 'membench_' prefix from exec
     df['exec'] = df['exec'].str.replace('membench_', '')
 
