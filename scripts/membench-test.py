@@ -81,8 +81,6 @@ def extract_sec_time_elapsed(perf_out):
 def run_membench(ex, flags, numa_node, cpu_node, iterations, n_operations):
     print(f"Running {ex} with flags {flags} on numa node {numa_node} and cpu node {cpu_node}, {iterations} it")
     event_str = ','.join(PERF_EVENTS)
-    # c = f"numactl --membind={numa_node} --cpunodebind={cpu_node} perf stat -e {event_str} ./{args.build_dir}/{ex} " \
-    #     f"-c -w {iterations} -o {n_operations} {flags}"
     c = f"numactl --membind={numa_node} --physcpubind={cpu_node} perf stat -e {event_str} ./{args.build_dir}/{ex} " \
         f"-c -w {iterations} -o {n_operations} {flags}"
     p = subprocess.run(shlex.split(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -98,23 +96,23 @@ def run_membench(ex, flags, numa_node, cpu_node, iterations, n_operations):
     return out_dict
 
 
-def benchmark_node(node_kind, iterations, n_operations):
+def benchmark_node(node_kind, iterations, n_ops):
     # print(f"Running benchmark on {node_kind} node")
     node = DRAM if node_kind == 'dram' else PMEM
 
     rows = list()
     rows.append({'node_kind': node_kind, 'access_pattern': 'seq', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-s', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-s', node[0], node[1], iterations, n_ops)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'pgn', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-g', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-g', node[0], node[1], iterations, n_ops)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'rnd', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-r', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-r', node[0], node[1], iterations, n_ops)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'seq_prefetch', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-s -p', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-s -p', node[0], node[1], iterations, n_ops)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'pgn_prefetch', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-g -p', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-g -p', node[0], node[1], iterations, n_ops)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'rnd_prefetch', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-r -p', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-r -p', node[0], node[1], iterations, n_ops)})
     return rows
 
 
@@ -187,19 +185,18 @@ if __name__ == '__main__':
 
                 f.flush()
 
-                print(f'-> Membench tests')
-                for w in spinloop_iterations:
-                    for row in benchmark_node('dram', w, n):
-                        writer.writerow({'exec': 'membench', 'run': r, **row})
-                    if not args.dram_only:
-                        for row in benchmark_node('pmem', w, n):
-                            writer.writerow({'exec': 'membench', 'run': r, **row})
-                    f.flush()
-                run_time = time.time() - t_start
-                # print runtime in hours
-                print(f'--- Run {r} took {m.ceil(run_time / 3600)} hours for flag {flag} ---')
+                print(f'None -> Membench tests')
+                # for w in spinloop_iterations:
+                #     for row in benchmark_node('dram', w, n):
+                #         writer.writerow({'exec': 'membench', 'run': r, **row})
+                #     if not args.dram_only:
+                #         for row in benchmark_node('pmem', w, n):
+                #             writer.writerow({'exec': 'membench', 'run': r, **row})
+                #     f.flush()
+                # run_time = time.time() - t_start
+                # # print runtime in hours
+                # print(f'--- Run {r} took {m.ceil(run_time / 3600)} hours for flag {flag} ---')
 
             f.close()
 
     print(f'--- Experiment took {m.ceil((time.time() - exp_time) / 3600)} hours ---')
-

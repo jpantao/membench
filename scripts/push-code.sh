@@ -4,7 +4,7 @@
 # ./scripts/push-code.sh  <remote-host> 
 
 remote_host=$1
-remote_dir="membench-g5k"
+remote_dir="membench-g5k-malloc"
 
 
 rm -rf $remote_dir
