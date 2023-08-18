@@ -153,27 +153,6 @@ int main(int argc, char *argv[]) {
             DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH / DATA_UNIT_SIZE; // Number of positions in the data array = 134,217,728
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // Number of data array positions per cache line
 
-    uint64_t access_1 = gen_address_CL64(&seed, data_len);
-    int access_2 = gen_address_CL64(&seed, data_len);
-
-    // Data initialization
-    uint64_t *data = malloc(data_size);
-    access_1 += data[gen_address_CL64(&seed, data_len)];
-//    for (register int i = 0; i < data_len; i++) {
-//        data[i] = gen_address_CL64(&seed, data_len);
-//    }
-
-    // Pregen array initialization -> expected misses ~= 100000000 * 4 / 64 = 6,250,000
-    int *pgn_addr = malloc(DEFAULT_N_OPERATIONS * sizeof(int));
-    access_2 += pgn_addr[gen_address_CL64(&seed, data_len)];
-//    for (register int i = 0; i < DEFAULT_N_OPERATIONS; i++) {
-//        pgn_addr[i] = gen_address_CL64(&seed, data_len);
-//    }
-
-
-    // print access_1 and access_2 to prevent compiler from optimizing them away
-    printf("access_1: %lu\n", access_1);
-    printf("access_2: %d\n", access_2);
 
     return 0;
 }

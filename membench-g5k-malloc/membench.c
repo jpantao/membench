@@ -153,27 +153,59 @@ int main(int argc, char *argv[]) {
             DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH / DATA_UNIT_SIZE; // Number of positions in the data array = 134,217,728
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // Number of data array positions per cache line
 
-    uint64_t access_1 = gen_address_CL64(&seed, data_len);
-    int access_2 = gen_address_CL64(&seed, data_len);
+    // Data initialization -> expected misses ~= 1024*1024*1024 / 64 = 16,777,216
+    __attribute__((aligned(CACHE_LINE_SIZE))) uint64_t *data = malloc(data_size);
+    for (register int i = 0; i < data_len; i++) {
+        data[i] = gen_address_CL64(&seed, data_len);
+    }
 
-    // Data initialization
-    uint64_t *data = malloc(data_size);
-    access_1 += data[gen_address_CL64(&seed, data_len)];
-//    for (register int i = 0; i < data_len; i++) {
-//        data[i] = gen_address_CL64(&seed, data_len);
-//    }
+    // Pregen array initialization -> expected misses ~= sizeof(int(4 bytes)) * n_operations / CACHE_LINE_SIZE = 67,108,864
+    __attribute__((aligned(CACHE_LINE_SIZE))) int *pgn_addr = malloc(DEFAULT_N_OPERATIONS * sizeof(int));
+    for (register int i = 0; i < DEFAULT_N_OPERATIONS; i++) {
+        pgn_addr[i] = gen_address_CL64(&seed, data_len);
+    }
 
-    // Pregen array initialization -> expected misses ~= 100000000 * 4 / 64 = 6,250,000
-    int *pgn_addr = malloc(DEFAULT_N_OPERATIONS * sizeof(int));
-    access_2 += pgn_addr[gen_address_CL64(&seed, data_len)];
-//    for (register int i = 0; i < DEFAULT_N_OPERATIONS; i++) {
-//        pgn_addr[i] = gen_address_CL64(&seed, data_len);
-//    }
+    // Main loop
+    gettimeofday(&tstart, NULL);
+    for (register int i = 0; i < n_operations; i++) {
 
+        if (op_seq)
+            offset = (offset + cache_line_size) % data_len;
+        else if (op_rand)
+            offset = gen_address_CL64(&seed, data_len);
+        else if (op_pregen)
+            offset = pgn_addr[i];
 
-    // print access_1 and access_2 to prevent compiler from optimizing them away
-    printf("access_1: %lu\n", access_1);
-    printf("access_2: %d\n", access_2);
+        if (op_prefetch)
+            __builtin_prefetch(data + offset, 0, 0);
+
+        gettimeofday(&spinloop_tstart, NULL);
+        spinloop(spinloop_iterations);
+        gettimeofday(&spinloop_tend, NULL);
+        total_spinloop_duration += time_diff(&spinloop_tstart, &spinloop_tend);
+
+        // Access memory: now load + store
+        data[offset] = access_memory(data + offset);
+
+    }
+    gettimeofday(&tend, NULL);
+
+    // Print results
+
+    float tp = 0;
+    if (n_operations > 0) {
+        unsigned long duration =
+                time_diff(&tstart, &tend) - (total_spinloop_duration); // mainloop_duration - total_spinloop_duration
+        tp = (float) n_operations / (((float) duration) / 1000); // In accesses per millisecond
+    }
+
+    double spinloop_duration = 0;
+    if (total_spinloop_duration > 0) {
+        spinloop_duration = (total_spinloop_duration / n_operations) / 1000; // In milliseconds
+    }
+
+    if (op_csv) printf("%f,%f\n", tp, spinloop_duration);
+    else printf("throughput: %f op/ms\ntotal_spinloop_duration: %f\n", tp, spinloop_duration);
 
     return 0;
 }
