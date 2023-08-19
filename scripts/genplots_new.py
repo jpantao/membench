@@ -140,6 +140,7 @@ def genplot_bench():
         # plt.show()
         plt.close()
 
+
 def exec_epspdf(filename):
     subprocess.run(['epspdf', '-b', filename], stdout=subprocess.DEVNULL)
     subprocess.run(['rm', f'{filename}.backup'])

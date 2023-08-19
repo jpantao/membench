@@ -98,23 +98,23 @@ def run_membench(ex, flags, numa_node, cpu_node, iterations, n_operations):
     return out_dict
 
 
-def benchmark_node(node_kind, iterations, n_operations):
+def benchmark_node(node_kind, iterations, n_ops):
     # print(f"Running benchmark on {node_kind} node")
     node = DRAM if node_kind == 'dram' else PMEM
 
     rows = list()
     rows.append({'node_kind': node_kind, 'access_pattern': 'seq', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-s', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-s', node[0], node[1], iterations, n_ops)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'pgn', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-g', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-g', node[0], node[1], iterations, n_ops)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'rnd', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-r', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-r', node[0], node[1], iterations, n_ops)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'seq_prefetch', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-s -p', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-s -p', node[0], node[1], iterations, n_ops)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'pgn_prefetch', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-g -p', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-g -p', node[0], node[1], iterations, n_ops)})
     rows.append({'node_kind': node_kind, 'access_pattern': 'rnd_prefetch', 'spinloop_iterations': iterations,
-                 **run_membench('membench', '-r -p', node[0], node[1], iterations, n_operations)})
+                 **run_membench('membench', '-r -p', node[0], node[1], iterations, n_ops)})
     return rows
 
 
@@ -202,4 +202,3 @@ if __name__ == '__main__':
             f.close()
 
     print(f'--- Experiment took {m.ceil((time.time() - exp_time) / 3600)} hours ---')
-
