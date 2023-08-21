@@ -8,6 +8,8 @@ import os
 import subprocess
 import shlex
 
+from matplotlib.ticker import FuncFormatter
+
 execs = ['membench_randr', 'membench_lehmer', 'membench_wyhash']
 
 
@@ -29,12 +31,22 @@ def gen_plots():
         print(f'Generating plots for {exe}')
         df = pd.read_csv(f'logs/{exe}.csv', dtype={'val': 'str', 'count': int})
         df = df.groupby(['val']).sum()
-        print(f'Number unique values: {len(df)}')
-        bins = range(0, 25, 1)
-        df.hist(column=['count'], grid=True, bins=bins, rwidth=0.9, color='#607c8e')
-        plt.title(f'{exe.split("_")[1]} - Random generation distribution')
+        # print(f'Number unique values: {len(df)}')
+        bins = range(0, 15, 1)
+        df.hist(column=['count'], grid=False, bins=bins, rwidth=0.9, color='steelblue')
+
+        ticks, _ = plt.yticks()
+        millions_ticks = [f'{tick / 1e6:.1f}M' for tick in ticks]
+        plt.yticks(ticks, millions_ticks)
+
+        plt.title(None)
         plt.xticks(bins)
+        plt.xlabel('Frequency (number of occurrences)')
+        plt.ylabel('Count (number of values)')
+
         plt.savefig(f'figs/{exe}.pdf')
+
+
 
 
 if __name__ == '__main__':
