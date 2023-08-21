@@ -153,13 +153,13 @@ int main(int argc, char *argv[]) {
             DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH / DATA_UNIT_SIZE; // Number of positions in the data array = 134,217,728
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // Number of data array positions per cache line
 
-    // Data initialization -> expected misses ~= 1024*1024*1024 / 64 = 16,777,216
+    // Data initialization -> expected misses ~= 1024*1024*1024 bytes / 64 bytes = 16 777 216
     __attribute__((aligned(CACHE_LINE_SIZE))) uint64_t *data = malloc(data_size);
     for (register int i = 0; i < data_len; i++) {
         data[i] = gen_address_CL64(&seed, data_len);
     }
 
-    // Pregen array initialization -> expected misses ~= sizeof(int(4 bytes)) * n_operations / CACHE_LINE_SIZE = 67,108,864
+    // Pregen array initialization -> expected misses ~= (4 bytes * DEFAULT_N_OPERATIONS) / 64 bytes = 6 250 000
     __attribute__((aligned(CACHE_LINE_SIZE))) int *pgn_addr = malloc(DEFAULT_N_OPERATIONS * sizeof(int));
     for (register int i = 0; i < DEFAULT_N_OPERATIONS; i++) {
         pgn_addr[i] = gen_address_CL64(&seed, data_len);

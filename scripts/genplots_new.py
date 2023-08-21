@@ -10,7 +10,7 @@ from matplotlib.container import ErrorbarContainer
 from matplotlib.ticker import FuncFormatter
 
 metrics = {
-    "throughput": [0, 70],
+    # "throughput": [0, 70],
     "cache-misses": [100, 110],
     "L1-dcache-load-misses": [165, 190],
     # "l1d.replacement": [None, None],
@@ -65,7 +65,7 @@ def genplot_baseline():
         stdev = df_b.pivot_table(m, 'exec', ['node_kind'], aggfunc='std')
         colors = gen_colors(means.columns)
 
-        ax = means.plot.bar(yerr=stdev, capsize=4, rot=0, ylim=[0, 100], color=colors)
+        ax = means.plot.bar(yerr=stdev, capsize=4, rot=0, ylim=[0, 1000], color=colors)
         add_bar_labels(ax)
         # add_errorbar_labels(ax, stdev)
         # addlabels(stdev.values.flatten())
@@ -173,6 +173,8 @@ if __name__ == '__main__':
     df['L1-dcache-load-misses'] = df['L1-dcache-load-misses'] / 1_000_000
     # convert cache-misses to M
     df['cache-misses'] = df['cache-misses'] / 1_000_000
+    # convert mem_load_retired.l1_miss to M
+    df['mem_load_retired.l1_miss'] = df['mem_load_retired.l1_miss'] / 1_000_000
 
     # remove 'membench_' prefix from exec
     df['exec'] = df['exec'].str.replace('membench_', '')

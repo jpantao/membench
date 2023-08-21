@@ -84,12 +84,12 @@ def run_membench(ex, flags, numa_node, cpu_node, iterations, n_operations):
     c = f"numactl --membind={numa_node} --physcpubind={cpu_node} perf stat -e {event_str} ./{args.build_dir}/{ex} " \
         f"-c -w {iterations} -o {n_operations} {flags}"
     p = subprocess.run(shlex.split(c), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    throughput, sl_duration = process_membench_stdout(p.stdout)
-    # print(p.stdout.decode())
+    # throughput, sl_duration = process_membench_stdout(p.stdout)
+    print(p.stdout.decode())
     # print(p.stderr.decode())
     out_dict = {
-        'throughput': throughput,
-        'spinloop_duration': sl_duration,
+        # 'throughput': throughput,
+        # 'spinloop_duration': sl_duration,
         'seconds-time-elapsed': extract_sec_time_elapsed(p.stderr),
         **dict(zip(PERF_EVENTS, extract_perf_results(p.stderr)))
     }

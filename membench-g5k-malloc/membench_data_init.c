@@ -153,18 +153,17 @@ int main(int argc, char *argv[]) {
             DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH / DATA_UNIT_SIZE; // Number of positions in the data array = 134,217,728
     int cache_line_size = CACHE_LINE_SIZE / DATA_UNIT_SIZE; // Number of data array positions per cache line
 
-    uint64_t access_1 = gen_address_CL64(&seed, data_len);
-    int access_2 = gen_address_CL64(&seed, data_len);
+    // ----------------------------------------------------------------------------
 
-    // Data initialization
-    uint64_t *data = malloc(data_size);
-    access_1 += data[gen_address_CL64(&seed, data_len)];
-//    for (register int i = 0; i < data_len; i++) {
-//        data[i] = gen_address_CL64(&seed, data_len);
-//    }
 
-    // print access_1 to prevent compiler from optimizing it away
-    printf("access_1: %lu\n", access_1);
+
+    // Data initialization -> expected misses ~= 1024*1024*1024 bytes / 64 bytes = 16 777 216
+    __attribute__((aligned(CACHE_LINE_SIZE))) uint64_t *data = malloc(data_size);
+    for (register int i = 0; i < data_len; i++) {
+        data[i] = gen_address_CL64(&seed, data_len);
+    }
+
+
 
     return 0;
 }
