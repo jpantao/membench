@@ -161,6 +161,7 @@ int main(int argc, char *argv[]) {
     __attribute__((aligned(CACHE_LINE_SIZE))) uint64_t *data = malloc(data_size);
     for (register int i = 0; i < data_len; i++) {
         data[i] = 333;
+        spinloop(4000);
     }
 
 

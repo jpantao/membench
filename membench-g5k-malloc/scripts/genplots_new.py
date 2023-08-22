@@ -13,7 +13,6 @@ metrics = {
     # "throughput": [0, 70],
     "cache-misses": [100, 110],
     "L1-dcache-load-misses": [165, 190],
-    "mem_load_retired.l1_miss": [165, 190],
     # "l1d.replacement": [None, None],
     # "LLC-load-misses": [None, None],
     # "LLC-store-misses": [None, None],

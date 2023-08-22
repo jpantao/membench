@@ -156,17 +156,18 @@ int main(int argc, char *argv[]) {
     // ----------------------------------------------------------------------------
 
 
-
     // Data initialization -> expected misses ~= 1024*1024*1024 bytes / 64 bytes = 16 777 216
     __attribute__((aligned(CACHE_LINE_SIZE))) uint64_t *data = malloc(data_size);
     for (register int i = 0; i < data_len; i++) {
-        data[i] = gen_address_CL64(&seed, data_len);
+        data[i] = 333;
+        spinloop(4000);
     }
 
     // Pregen array initialization -> expected  ~= (4 bytes * DEFAULT_N_OPERATIONS) / 64 bytes = 6 250 000
     __attribute__((aligned(CACHE_LINE_SIZE))) int *pgn_addr = malloc(DEFAULT_N_OPERATIONS * sizeof(int));
     for (register int i = 0; i < DEFAULT_N_OPERATIONS; i++) {
-        pgn_addr[i] = gen_address_CL64(&seed, data_len);
+        pgn_addr[i] = 333;
+        spinloop(4000);
     }
 
     return 0;

@@ -160,7 +160,8 @@ int main(int argc, char *argv[]) {
     // Data initialization -> expected misses ~= 1024*1024*1024 bytes / 64 bytes = 16 777 216
     __attribute__((aligned(CACHE_LINE_SIZE))) uint64_t *data = malloc(data_size);
     for (register int i = 0; i < data_len; i++) {
-        data[i] = gen_address_CL64(&seed, data_len);
+        data[i] = 333;
+        spinloop(4000);
     }
 
 
