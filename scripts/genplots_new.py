@@ -173,8 +173,6 @@ if __name__ == '__main__':
     df['L1-dcache-load-misses'] = df['L1-dcache-load-misses'] / 1_000_000
     # convert cache-misses to M
     df['cache-misses'] = df['cache-misses'] / 1_000_000
-    # convert mem_load_retired.l1_miss to M
-    df['mem_load_retired.l1_miss'] = df['mem_load_retired.l1_miss'] / 1_000_000
 
     # remove 'membench_' prefix from exec
     df['exec'] = df['exec'].str.replace('membench_', '')

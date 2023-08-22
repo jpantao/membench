@@ -65,7 +65,7 @@ def genplot_baseline():
         stdev = df_b.pivot_table(m, 'exec', ['node_kind'], aggfunc='std')
         colors = gen_colors(means.columns)
 
-        ax = means.plot.bar(yerr=stdev, capsize=4, rot=0, ylim=[0, 1000], color=colors)
+        ax = means.plot.bar(yerr=stdev, capsize=4, rot=0, ylim=[0, 100], color=colors)
         add_bar_labels(ax)
         # add_errorbar_labels(ax, stdev)
         # addlabels(stdev.values.flatten())
