@@ -142,12 +142,31 @@ if __name__ == '__main__':
         ]
 
     n_operations = [100_000_000]
-    compiler_flags = ['-O3', '-O0']
-    # compiler_flags = ['-O0']
-    # compiler_flags = ['-O3']
-    runs = range(1, int(args.n_runs) + 1)
-    spinloop_iterations = [0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000]
+    compiler_flags = [
+        '-O3',
+        '-O0'
+    ]
+    spinloop_iterations = [
+        0,
+        # 500,
+        # 1_000,
+        # 1_500,
+        # 2_000,
+        2_500,
+        # 3_000,
+        # 3_500,
+        # 4_000,
+        # 4_500,
+        5_000,
+        10_000,
+        # 20_000,
+        # 30_000,
+        # 40_000,
+        50_000,
+        100_000,
+    ]
 
+    runs = range(1, int(args.n_runs) + 1)
     os.makedirs('logs', exist_ok=True)
     exp_time = time.time()
     for n in n_operations:
