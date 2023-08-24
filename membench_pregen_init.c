@@ -7,7 +7,7 @@
 
 #define DEFAULT_MEMORY_BENCH_SIZE_TO_BENCH (1024*1024*1024) // In bytes (1GB)
 #define DEFAULT_SPINLOOP_ITERATIONS 0
-#define DEFAULT_N_OPERATIONS 100000000 // Number of operations to perform = 100M
+#define DEFAULT_N_OPERATIONS 10000000 // Number of operations to perform = 10
 
 #define DATA_UNIT_SIZE      sizeof(uint64_t) // In bytes = 8
 #define CACHE_LINE_SIZE     64 // In bytes
