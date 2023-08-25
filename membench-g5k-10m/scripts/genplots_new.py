@@ -27,7 +27,7 @@ color_map = {
     "pmem_prefetch": "goldenrod",
 }
 
-line_styles = ['-', '--', '-.', ':']
+line_styles = ['x-', 'x--', 'x-.', 'x:']
 
 prefetch_suffix = '_prefetch'
 plot_extension = 'pdf'
