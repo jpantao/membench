@@ -141,7 +141,7 @@ if __name__ == '__main__':
             "mem_load_retired.local_pmm"
         ]
 
-    n_operations = [100_000_000]
+    n_operations = [10_000_000]
     compiler_flags = [
         '-O3',
         '-O0'
