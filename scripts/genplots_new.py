@@ -11,8 +11,8 @@ from matplotlib.ticker import FuncFormatter
 
 metrics = {
     "throughput": [0, 70],
-    "cache-misses": [100, 110],
-    "L1-dcache-load-misses": [165, 190],
+    "cache-misses": [None, None],
+    "L1-dcache-load-misses": [None, None],
     # "l1d.replacement": [None, None],
     # "LLC-load-misses": [None, None],
     # "LLC-store-misses": [None, None],

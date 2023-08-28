@@ -134,29 +134,29 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if not args.dram_only:
-        PERF_EVENTS = PERF_EVENTS + [
-            "mem_load_retired.l3_miss",
-            "mem_load_l3_miss_retired.local_dram",
-            "mem_load_retired.local_pmm"
-        ]
+    # if not args.dram_only:
+    #     PERF_EVENTS = PERF_EVENTS + [
+    #         "mem_load_retired.l3_miss",
+    #         "mem_load_l3_miss_retired.local_dram",
+    #         "mem_load_retired.local_pmm"
+    #     ]
 
-    n_operations = [100_000_000]
+    n_operations = [10_000_000]
     compiler_flags = [
         '-O3',
         '-O0'
     ]
     spinloop_iterations = [
         0,
-        # 500,
-        # 1_000,
-        # 1_500,
-        # 2_000,
+        500,
+        1_000,
+        1_500,
+        2_000,
         2_500,
-        # 3_000,
-        # 3_500,
-        # 4_000,
-        # 4_500,
+        3_000,
+        3_500,
+        4_000,
+        4_500,
         5_000,
         10_000,
         15_000,
