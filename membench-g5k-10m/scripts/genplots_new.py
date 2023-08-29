@@ -11,8 +11,8 @@ from matplotlib.ticker import FuncFormatter
 
 metrics = {
     "throughput": [0, 70],
-    "cache-misses": [100, 110],
-    "L1-dcache-load-misses": [165, 190],
+    "cache-misses": [None, None],
+    "L1-dcache-load-misses": [None, None],
     # "l1d.replacement": [None, None],
     # "LLC-load-misses": [None, None],
     # "LLC-store-misses": [None, None],
@@ -133,7 +133,8 @@ def genplot_bench():
             plt.legend(fontsize="small", loc='upper left')
         else:
             # remove legend
-            plt.gca().get_legend().remove()
+            # plt.gca().get_legend().remove()
+            plt.legend(fontsize="small", loc='upper left')
 
         plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}', bbox_inches='tight')
         exec_epspdf(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}')

@@ -133,7 +133,8 @@ def genplot_bench():
             plt.legend(fontsize="small", loc='upper left')
         else:
             # remove legend
-            plt.gca().get_legend().remove()
+            # plt.gca().get_legend().remove()
+            plt.legend(fontsize="small", loc='upper left')
 
         plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}', bbox_inches='tight')
         exec_epspdf(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}')
