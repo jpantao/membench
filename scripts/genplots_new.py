@@ -11,7 +11,7 @@ from matplotlib.ticker import FuncFormatter
 
 metrics = {
     "throughput": [0, 70],
-    "cache-misses": [100, 110],
+    "cache-misses": [95, 120],
     "L1-dcache-load-misses": [165, 190],
     # "l1d.replacement": [None, None],
     # "LLC-load-misses": [None, None],
@@ -27,7 +27,7 @@ color_map = {
     "pmem_prefetch": "goldenrod",
 }
 
-line_styles = ['x-', 'x--', 'x-.', 'x:']
+line_styles = ['-', '--', '.-', '.--']
 
 prefetch_suffix = '_prefetch'
 plot_extension = 'pdf'
@@ -117,9 +117,16 @@ def genplot_bench():
         means.index = spinloop_duration['spinloop_duration']
 
         columns = [f'{t[1]}{prefetch_suffix}' if prefetch_suffix in t[0] else t[1] for t in means.columns]
-        colors = gen_colors(columns)
+
+        # rename columns
+        means.columns = columns
+
+        # reorder columns
+        means = means[['dram', 'dram_prefetch', 'pmem', 'pmem_prefetch']]
+        colors = gen_colors(means.columns)
 
         means.plot(style=line_styles, rot=0, ylim=metrics[m], color=colors)
+
         # plt.title(f'{m} for {p} access pattern')
         if m == 'throughput':
             plt.ylabel(f'Throughput (Kops/s)')
@@ -134,6 +141,7 @@ def genplot_bench():
         else:
             # remove legend
             plt.gca().get_legend().remove()
+            # plt.legend(fontsize="small")
 
         plt.savefig(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}', bbox_inches='tight')
         exec_epspdf(f'{out_dir}/{out_dir.split("/")[1]}_spinloop_{p}_{m}.{plot_extension}')
