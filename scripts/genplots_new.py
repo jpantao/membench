@@ -65,7 +65,11 @@ def genplot_baseline():
         stdev = df_b.pivot_table(m, 'exec', ['node_kind'], aggfunc='std')
         colors = gen_colors(means.columns)
 
-        ax = means.plot.bar(yerr=stdev, capsize=4, rot=0, ylim=[0, 100], color=colors)
+        lim = 100
+        if m == 'cache-misses':
+            lim = 10
+
+        ax = means.plot.bar(yerr=stdev, capsize=4, rot=0, ylim=[0, lim], color=colors)
         add_bar_labels(ax)
         # add_errorbar_labels(ax, stdev)
         # addlabels(stdev.values.flatten())
@@ -83,7 +87,7 @@ def add_bar_labels(ax):
     for container in ax.containers:
         if isinstance(container, ErrorbarContainer):
             continue
-        ax.bar_label(container, labels=[f'{x:,.2f}M' for x in container.datavalues], rotation=45, padding=3)
+        ax.bar_label(container, labels=[f'{x:,.1f}M' for x in container.datavalues], rotation=45, padding=3)
 
 
 def add_errorbar_labels(ax, stddev):
